@@ -100,6 +100,6 @@ if doScaleMSE
     error = error / MSEscale;
 end
 
-
+error
 
 end

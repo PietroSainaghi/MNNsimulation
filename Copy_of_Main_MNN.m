@@ -152,7 +152,7 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'discrete'; % 'discrete' or 'continuous'
+discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
@@ -160,7 +160,7 @@ PossibleStiffnessArray = linspace(-2.0, 2.3, 43000);
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
-optimizerArray = {'GA'}; % 'GA', 'SQP'
+optimizerArray = {'SQP'}; % 'GA', 'SQP'
 
 % whether to use deterministic random initial conditions
 deterministicRNG = 0;
@@ -195,23 +195,19 @@ scalingterm = 1;
 % plot undeformed lattice
 plotUndeformed = 1;
 
-% plot stiffness combinations in lattice
-plotColoredLattice = 1;
-
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
 plotDeformed = 1;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
 
 % assemble plotOptionsStruct
 plotOptionsStruct.scalingterm = scalingterm;
 plotOptionsStruct.plotUndeformed = plotUndeformed;
 plotOptionsStruct.plotDeformed = plotDeformed;
 plotOptionsStruct.plotEndpoints = plotEndpoints;
-plotOptionsStruct.plotColoredLattice = plotColoredLattice;
 
 
 %% Save File
@@ -238,28 +234,13 @@ end
 
 % only happens if caseType = 3
 if caseType == 3
-    
     % TODO
-    % To improve
     [fileList, dataPath] = uigetfile('*.mat','Select preset behavior','MultiSelect', 'on');
     NumBehFiles = 1;
     load([dataPath,fileList]);
-    BehaviorStruct.fileList = fileList;
-    BehaviorStruct.dataPath = dataPath;
-    NcasesArray = [PregenBehStruct.Ncases];
+    
     BehaviorStruct.NcasesArray = [PregenBehStruct.Ncases];
     
-    % check if preset behavior and lattice geometry setting set in code
-    % here are compatible
-    if (length(LatticeGeometryStruct.NinputANDoutputArray) > 1) || (length(LatticeGeometryStruct.NinputANDoutputArray) > 1)
-        error('You must only specify one lattice size if you are using preset behaviors')
-    end
-    if LatticeGeometryStruct.NinputANDoutputArray ~= PregenBehStruct.NinputANDoutput
-        error('Preset behavior structure is incompatible with your current lattice geometry, wrong NinputANDoutput')
-    end
-    if LatticeGeometryStruct.NlayersArray ~= PregenBehStruct.Nlayers
-        error('Preset behavior structure is incompatible with your current lattice geometry, wrong Nlayers')
-    end
 else
     NumBehFiles = 1;
 end

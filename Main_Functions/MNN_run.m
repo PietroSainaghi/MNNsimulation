@@ -52,9 +52,9 @@ for icIter = 1:startPts
                     minIDX = 1;
                     maxIDX = length(PossibleStiffnessArray);
                     nvars = length(xInit);
-                    population = 500;
-                    generations = 4000;
-                    stallgenerations = 50;
+                    population = 1000;
+                    generations = 100;
+                    stallgenerations = 5;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...
@@ -89,8 +89,8 @@ for icIter = 1:startPts
                     coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,stiffnesscombofinal);
                     
                     % extract iteration progression data from mat file created by gaoutfun
-                    load('tempResultsFile.mat')
-                    delete('tempResultsFile.mat')
+                    load('CacheDirectory.mat')
+                    load(CachePath)
                     
                     % output data
                     ResultsStruct(icIter).x_idx = x_idx;
@@ -113,9 +113,9 @@ for icIter = 1:startPts
                     
                     % optimizer options and parameters
                     nvars = length(xInit);
-                    population = 400;
-                    generations = 128000;
-                    stallgenerations = 6000;
+                    population = 1000;
+                    generations = 500000;
+                    stallgenerations = 1000;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...
@@ -146,8 +146,8 @@ for icIter = 1:startPts
                     coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
                     
                     % extract iteration progression data from mat file created by gaoutfun
-                    load('tempResultsFile.mat')
-                    delete('tempResultsFile.mat')
+                    load('CacheDirectory.mat')
+                    load(CachePath)
                     
                     % output data
                     ResultsStruct(icIter).x = x;
@@ -210,6 +210,10 @@ for icIter = 1:startPts
     % plot endpoints
     if plotOptionsStruct.plotEndpoints == 1
         plotEndpointsFunction(LatticeGeometryStruct,BehaviorStruct,ResultsStruct(icIter));
+    end
+    % plot colored lattice
+    if plotOptionsStruct.plotColoredLattice == 1
+        plotColoredStiffnessValues(LinkPropertiesStruct, LatticeGeometryStruct, ResultsStruct(icIter).x, 'Main_Functions\colormap.mat');
     end
     
 end % end initial conditions loop

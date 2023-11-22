@@ -195,23 +195,19 @@ scalingterm = 1;
 % plot undeformed lattice
 plotUndeformed = 1;
 
-% plot stiffness combinations in lattice
-plotColoredLattice = 1;
-
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
 plotDeformed = 1;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
 
 % assemble plotOptionsStruct
 plotOptionsStruct.scalingterm = scalingterm;
 plotOptionsStruct.plotUndeformed = plotUndeformed;
 plotOptionsStruct.plotDeformed = plotDeformed;
 plotOptionsStruct.plotEndpoints = plotEndpoints;
-plotOptionsStruct.plotColoredLattice = plotColoredLattice;
 
 
 %% Save File
@@ -240,7 +236,6 @@ end
 if caseType == 3
     
     % TODO
-    % To improve
     [fileList, dataPath] = uigetfile('*.mat','Select preset behavior','MultiSelect', 'on');
     NumBehFiles = 1;
     load([dataPath,fileList]);
@@ -249,16 +244,11 @@ if caseType == 3
     NcasesArray = [PregenBehStruct.Ncases];
     BehaviorStruct.NcasesArray = [PregenBehStruct.Ncases];
     
-    % check if preset behavior and lattice geometry setting set in code
-    % here are compatible
-    if (length(LatticeGeometryStruct.NinputANDoutputArray) > 1) || (length(LatticeGeometryStruct.NinputANDoutputArray) > 1)
-        error('You must only specify one lattice size if you are using preset behaviors')
-    end
-    if LatticeGeometryStruct.NinputANDoutputArray ~= PregenBehStruct.NinputANDoutput
+    if LatticeGeometryStruct.NinputANDoutput ~= PregenBehStruct.NinputANDoutput
         error('Preset behavior structure is incompatible with your current lattice geometry, wrong NinputANDoutput')
     end
-    if LatticeGeometryStruct.NlayersArray ~= PregenBehStruct.Nlayers
-        error('Preset behavior structure is incompatible with your current lattice geometry, wrong Nlayers')
+    if LatticeGeometryStruct.Nlayers ~= PregenBehStruct.Nlayers
+        error('Preset behavior structure is incompatible with your current lattice geometry, wrong ')
     end
 else
     NumBehFiles = 1;

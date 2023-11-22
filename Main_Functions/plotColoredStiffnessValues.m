@@ -28,10 +28,11 @@ hold on
 
 % plot colored beams
 for beamIDX = 1:Nbeams
+    
     plot( [ coord_initial( connectivity(beamIDX,1), 1 ) coord_initial( connectivity(beamIDX,2), 1 ) ],...
         [ coord_initial( connectivity(beamIDX,1), 2 ) coord_initial( connectivity(beamIDX,2), 2 ) ],...
-        "Color",mymap2(round( (Ncolors-1) / (kLinMax - kLinMin) * (x(beamIDX) - kLinMin) )+1, :),...
-        LineWidth=3)
+        'Color',mymap2(round( (Ncolors-1) / (kLinMax - kLinMin) * (x(beamIDX) - kLinMin) )+1, :),...
+        'LineWidth',3)
 end
 
 %b plot top and bottom ground
