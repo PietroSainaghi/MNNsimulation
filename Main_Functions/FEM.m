@@ -48,13 +48,13 @@ for e=1:Nbeams
     K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
 end
 % removed line to replace with sparse matrix operation
-% Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
+Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
 U=(zeros(DOFFinal,Ncases));
 U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
 
 for j=1:Ncases
-    Ktoinvert = K(Final,Final);
-    U(:,j)=Ktoinvert\F(Final,j);
+    
+    U(:,j)=Kinv*F(Final,j);
     i2=1;
     for i=DOFnodes %loop through the nodes that are not fixed
         U2(i,:,j)=transpose(U(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));

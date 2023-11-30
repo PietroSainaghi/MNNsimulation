@@ -88,14 +88,14 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 2;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
     % set as array to test multiple ones at once
     % can only be 2 for caseType = 1
     % will be overwritten for caseType = 3
-NcasesArray             = [1]; 
+NcasesArray             = [2]; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;
@@ -108,12 +108,13 @@ Elongation_maxArray  = [0.0025]; % units of m
 % aplitude of sine wave for sinusoid behavior
     % set same value as Elongation_maxArray for looping convenience, since
     % random and sinusoid are not tested in the same run
+    % will be overwritten for caseType = 3
 dxArray              = Elongation_maxArray; % units of m
 
 % maximum allowed input force
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-MaxForceArray = [0.5]; % units of N
+MaxForceArray = [8]; % units of N
 
 % type of RNG for randomized behavior
 RNGtype = 'deterministic'; % options: 'dateandtime' 'deterministic' 'nocontrol'
@@ -138,10 +139,10 @@ ForceScaling        = false;
 startPts            = 1;
 
 % select treshlod for desired precision
-errorChangeThreshold  = 1e-100;
+errorChangeThreshold  = 1e-15;
 
 % type of initial condition
-icType          = 3; %1) all max, 2) all min, 3) rand
+icType          = 2; %1) all max, 2) all min, 3) rand
 
 % wether to use MSE or scaled normalized MSE
 doScaleMSE = 0; % 0) use MSE, 1) use unitless MSE
@@ -152,15 +153,15 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'discrete'; % 'discrete' or 'continuous'
+discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-PossibleStiffnessArray = linspace(-2.0, 2.3, 43000);
+PossibleStiffnessArray = linspace(-2.0, 2.3, 430);
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
-optimizerArray = {'GA'}; % 'GA', 'SQP'
+optimizerArray = {'SQP'}; % 'GA', 'SQP'
 
 % whether to use deterministic random initial conditions
 deterministicRNG = 0;
@@ -169,7 +170,7 @@ deterministicRNG = 0;
 % will be same as results if false
 % set to true if using GA or other algorithm with lots of function
 % evaluations
-SpecifyCache = 0;
+SpecifyCache = 1;
 
 
 % assemble OptimizerDataStruct
@@ -196,15 +197,15 @@ scalingterm = 1;
 plotUndeformed = 1;
 
 % plot stiffness combinations in lattice
-plotColoredLattice = 1;
+plotColoredLattice = 0;
 
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
-plotDeformed = 1;
+plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
 
 % assemble plotOptionsStruct
 plotOptionsStruct.scalingterm = scalingterm;
@@ -343,6 +344,9 @@ for NinputANDoutputIter = 1:length(NinputANDoutputArray)
                                 BehaviorStruct.Target = PregenBehStruct.Target;
                                 BehaviorStruct.forces = PregenBehStruct.forces;
                                 BehaviorStruct.Ncases = PregenBehStruct.Ncases;
+                                BehaviorStruct.Elongation_max = PregenBehStruct.Elongation_max;
+                                BehaviorStruct.MaxForce = PregenBehStruct.MaxForce;
+                                BehaviorStruct.dx = PregenBehStruct.dx;
                             end
                             
                             % set overall run number

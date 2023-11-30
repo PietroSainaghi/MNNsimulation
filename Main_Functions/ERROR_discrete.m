@@ -36,7 +36,6 @@ MSEunits = OptimizerDataStruct.MSEunits;
 discspaceidx; % [Nbeams] stiffness value of each beam, selected from PossibleStiffnessArray
 PossibleStiffnessArray;
     
-    
 %% function output
 
 error = 0; % MSE can be in length^2 or unitless depending on performance metrics
@@ -100,6 +99,5 @@ if doScaleMSE
     error = error / MSEscale;
 end
 
-error
 
 end

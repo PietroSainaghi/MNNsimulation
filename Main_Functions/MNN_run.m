@@ -52,9 +52,9 @@ for icIter = 1:startPts
                     minIDX = 1;
                     maxIDX = length(PossibleStiffnessArray);
                     nvars = length(xInit);
-                    population = 1000;
-                    generations = 100;
-                    stallgenerations = 5;
+                    population = 100;
+                    generations = 500;
+                    stallgenerations = 50;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...
@@ -75,7 +75,8 @@ for icIter = 1:startPts
                     
                     % optimization using GA
                     disp('Starting Optimization')
-                    [x_idx,fval,exitflag,output,~,scores] = ga(fun,nvars,[],[],[],[],ones(1,nvars)*minIDX,ones(1,nvars)*maxIDX,constraint,[1:1:nvars], options);
+                    % [x_idx,fval,exitflag,output,~,scores] = ga(fun,nvars,[],[],[],[],ones(1,nvars)*minIDX,ones(1,nvars)*maxIDX,constraint,[1:1:nvars], options);
+                    [x_idx,fval,exitflag,output,~,scores] = ga(fun,nvars,[],[],[],[],ones(1,nvars)*minIDX,ones(1,nvars)*maxIDX,[],[1:1:nvars],options);
                     
                     % optimal stiffness values
                     for eachx = 1:length(x_idx)
