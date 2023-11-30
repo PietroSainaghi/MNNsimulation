@@ -41,13 +41,13 @@ k56                  = 2.11; %N/rad
 k66                  = 25.3; %N*m/rad
 
 % passive axial stiffness
-kLinPassive             = 2120;
+kLinPassive             = 2120; %N/m
 
 % maximum controllable stiffness
-kLinMax                 = 2300;
+kLinMax                 = 2300; %N/m
 
 % minimum controllable stiffness
-kLinMin                 = -2000;
+kLinMin                 = -2000; %N/m
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.L1 = L1;
@@ -88,7 +88,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 2;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -142,7 +142,7 @@ startPts            = 1;
 errorChangeThreshold  = 1e-15;
 
 % type of initial condition
-icType          = 2; %1) all max, 2) all min, 3) rand
+icType          = 3; %1) all max, 2) all min, 3) rand
 
 % wether to use MSE or scaled normalized MSE
 doScaleMSE = 0; % 0) use MSE, 1) use unitless MSE
@@ -153,15 +153,15 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'continuous'; % 'discrete' or 'continuous'
+discORcont = 'discrete'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-PossibleStiffnessArray = linspace(-2.0, 2.3, 430);
+PossibleStiffnessArray = linspace(-2000, 2300, 4300); %N/m
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
-optimizerArray = {'SQP'}; % 'GA', 'SQP'
+optimizerArray = {'GA'}; % 'GA', 'SQP'
 
 % whether to use deterministic random initial conditions
 deterministicRNG = 0;

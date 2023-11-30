@@ -52,9 +52,9 @@ for icIter = 1:startPts
                     minIDX = 1;
                     maxIDX = length(PossibleStiffnessArray);
                     nvars = length(xInit);
-                    population = 100;
-                    generations = 500;
-                    stallgenerations = 50;
+                    population = 1000;
+                    generations = 2000000;
+                    stallgenerations = 50000;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...
@@ -114,9 +114,9 @@ for icIter = 1:startPts
                     
                     % optimizer options and parameters
                     nvars = length(xInit);
-                    population = 1000;
-                    generations = 500000;
-                    stallgenerations = 1000;
+                    population = 100;
+                    generations = 1000;
+                    stallgenerations = 50;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...

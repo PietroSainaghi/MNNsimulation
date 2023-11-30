@@ -1,4 +1,4 @@
-function coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
+function [coorddeformed,Kf2u,Ku2f]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
 
 % author: Pietro Sainaghi
 % original program written by Reinier Kuppens and Ryan Lee
@@ -47,13 +47,11 @@ for e=1:Nbeams
     %Combine stiffness matrix for solving
     K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
 end
-% removed line to replace with sparse matrix operation
 Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
 U=(zeros(DOFFinal,Ncases));
 U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
 
 for j=1:Ncases
-    
     U(:,j)=Kinv*F(Final,j);
     i2=1;
     for i=DOFnodes %loop through the nodes that are not fixed
@@ -64,4 +62,6 @@ for j=1:Ncases
     coorddeformed(:,:,j)=coord_initial+U2(:,:,j);
 
 end
+Kf2u = Kinv;
+Ku2f = K;
 end
