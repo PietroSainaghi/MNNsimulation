@@ -52,9 +52,9 @@ for icIter = 1:startPts
                     minIDX = 1;
                     maxIDX = length(PossibleStiffnessArray);
                     nvars = length(xInit);
-                    population = 1000;
-                    generations = 2000000;
-                    stallgenerations = 50000;
+                    population = 100;
+                    generations = 200000;
+                    stallgenerations = 5000;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
                         'PlotFcn', @gaplotbestf,...
@@ -210,7 +210,7 @@ for icIter = 1:startPts
     
     % plot endpoints
     if plotOptionsStruct.plotEndpoints == 1
-        plotEndpointsFunction(LatticeGeometryStruct,BehaviorStruct,ResultsStruct(icIter));
+        plotEndpointsFunction(LatticeGeometryStruct,BehaviorStruct,ResultsStruct(icIter), plotOptionsStruct.plotEndPointsAmplitude);
     end
     % plot colored lattice
     if plotOptionsStruct.plotColoredLattice == 1

@@ -139,7 +139,7 @@ ForceScaling        = false;
 startPts            = 1;
 
 % select treshlod for desired precision
-errorChangeThreshold  = 1e-15;
+errorChangeThreshold  = 1e-50;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -157,7 +157,7 @@ discORcont = 'discrete'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-PossibleStiffnessArray = linspace(-2000, 2300, 4300); %N/m
+PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
@@ -170,7 +170,7 @@ deterministicRNG = 0;
 % will be same as results if false
 % set to true if using GA or other algorithm with lots of function
 % evaluations
-SpecifyCache = 1;
+SpecifyCache = 0;
 
 
 % assemble OptimizerDataStruct
@@ -206,6 +206,8 @@ plotDeformed = 0;
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
 plotEndpoints = 1;
+    % amplitude of axes around initial position
+plotEndPointsAmplitude = 0.0025; % in m
 
 % assemble plotOptionsStruct
 plotOptionsStruct.scalingterm = scalingterm;
@@ -213,6 +215,7 @@ plotOptionsStruct.plotUndeformed = plotUndeformed;
 plotOptionsStruct.plotDeformed = plotDeformed;
 plotOptionsStruct.plotEndpoints = plotEndpoints;
 plotOptionsStruct.plotColoredLattice = plotColoredLattice;
+plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 
 
 %% Save File
