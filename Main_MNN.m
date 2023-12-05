@@ -139,6 +139,8 @@ ForceScaling        = false;
 startPts            = 1;
 
 % select treshlod for desired precision
+% optimizer will converge when the difference between error iterations is
+% less than the specified value
 errorChangeThreshold  = 1e-100;
 
 % type of initial condition
@@ -163,6 +165,13 @@ PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
     % set as cell to test multiple ones at once
 optimizerArray = {'GA'}; % 'GA', 'SQP'
 
+% Genetic Algorithm Options
+% Only used if optimizer is GA
+GApopulation = 250; % number of function evaluations each iteration
+GAgenerations = 2000000; % max number of iterations
+GAstallgenerations = 5000; % max number of iterations with same outcome for exit flag
+GAparallelPool = true; % whether to use multithreaded optimizer (faster but more resource intensive)
+
 % whether to use deterministic random initial conditions
 deterministicRNG = 0;
 
@@ -185,6 +194,10 @@ OptimizerDataStruct.deterministicRNG = deterministicRNG;
 OptimizerDataStruct.PossibleStiffnessArray = PossibleStiffnessArray;
 OptimizerDataStruct.MSEunits = MSEunits;
 OptimizerDataStruct.SpecifyCache = SpecifyCache;
+OptimizerDataStruct.GApopulation = GApopulation;
+OptimizerDataStruct.GAgenerations = GAgenerations;
+OptimizerDataStruct.GAstallgenerations = GAstallgenerations;
+OptimizerDataStruct.GAparallelPool = GAparallelPool;
 
 
 %% Plotting Options Configuration
