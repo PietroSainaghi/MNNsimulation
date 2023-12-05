@@ -139,7 +139,7 @@ ForceScaling        = false;
 startPts            = 1;
 
 % select treshlod for desired precision
-errorChangeThreshold  = 1e-50;
+errorChangeThreshold  = 1e-100;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand

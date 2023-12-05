@@ -53,7 +53,7 @@ for icIter = 1:startPts
                     maxIDX = length(PossibleStiffnessArray);
                     nvars = length(xInit);
                     population = 100;
-                    generations = 200000;
+                    generations = 2000000;
                     stallgenerations = 5000;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
