@@ -4,8 +4,7 @@ close all
 
 % Author: Pietro Sainaghi
 % code modified from: Binary_MinStiffness by Ryan Lee
-% works with the other functions in this folder, written by Reinier Kuppens
-% and Ryan Lee
+% works with the other functions in this folder, mostly written by Ryan Lee
 
 % this code studies a given MNN lattice ability to learn behaviors with
 % respect to various lattice parameters
