@@ -11,6 +11,7 @@ discORcont = OptimizerDataStruct.discORcont;
 icType = OptimizerDataStruct.icType;
 PossibleStiffnessArray = OptimizerDataStruct.PossibleStiffnessArray;
 deterministicRNG = OptimizerDataStruct.deterministicRNG;
+RNGseedMult = OptimizerDataStruct.RNGseedMult;
 
 % lattice structure - LatticeGeometryStruct
 Nbeams = LatticeGeometryStruct.Nbeams;
@@ -33,10 +34,18 @@ switch discORcont
         elseif icType == 3
             % randomized initial state
             
-            % enable deterministic RNG
+            % no seed if deterministicRNG == 0
+            
+            % enable deterministic RNG based on seed multiplier
             if deterministicRNG == 1
-                rng(icIter*3);
+                rng(icIter*RNGseedMult);
             end
+            % enable non-deterministic RNG based on date and time
+            if deterministicRNG == 2
+                rng('shuffle');
+            end
+            
+            % set random initial state
             randomizedIndices = randi(length(PossibleStiffnessArray),Nbeams,1);
             xInit = zeros(Nbeams,1);
             for eachx = 1:Nbeams
@@ -59,11 +68,18 @@ switch discORcont
         elseif icType == 3
             % randomized initial state
             
+            % no seed if deterministicRNG == 0
+            
             % enable deterministic RNG
             if deterministicRNG == 1
-                rng(icIter*3);
+                rng(icIter*RNGseedMult);
+            end
+            % enable non-deterministic RNG based on date and time
+            if deterministicRNG == 2
+                rng('shuffle');
             end
             
+            % set random initial state
             xInit = kLinMin + (kLinMax - kLinMin) * rand(Nbeams,1);
             
         end

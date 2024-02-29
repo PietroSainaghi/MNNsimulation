@@ -145,6 +145,12 @@ errorChangeThreshold  = 1e-100;
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
 
+% whether to use deterministic random initial conditions
+    % use date and time if you want to ensure different initial conditions every time
+    % use seed multiplier if you want to control your initial condition     
+deterministicRNG = 2; % 0) use base RNG 1) specify a seed for rng 2) seed is date and time
+RNGseedMult = 3; % for deterministicRNG = 1, the seed will be loopnumber*RNGseedMult
+
 % wether to use MSE or scaled normalized MSE
 doScaleMSE = 0; % 0) use MSE, 1) use unitless MSE
 
@@ -171,8 +177,6 @@ GAgenerations = 2000000; % max number of iterations
 GAstallgenerations = 5000; % max number of iterations with same outcome for exit flag
 GAparallelPool = true; % whether to use multithreaded optimizer (faster but more resource intensive)
 
-% whether to use deterministic random initial conditions
-deterministicRNG = 0;
 
 % whether to set computational cache in separate folder
 % will be same as results if false
@@ -197,6 +201,7 @@ OptimizerDataStruct.GApopulation = GApopulation;
 OptimizerDataStruct.GAgenerations = GAgenerations;
 OptimizerDataStruct.GAstallgenerations = GAstallgenerations;
 OptimizerDataStruct.GAparallelPool = GAparallelPool;
+OptimizerDataStruct.RNGseedMult = RNGseedMult;
 
 
 %% Plotting Options Configuration
