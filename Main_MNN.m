@@ -175,7 +175,7 @@ optimizerArray = {'GA'}; % 'GA', 'SQP'
 GApopulation = 250; % number of function evaluations each iteration
 GAgenerations = 2000000; % max number of iterations
 GAstallgenerations = 5000; % max number of iterations with same outcome for exit flag
-GAparallelPool = true; % whether to use multithreaded optimizer (faster but more resource intensive)
+GAparallelPool = false; % whether to use multithreaded optimizer (faster but more resource intensive)
 
 
 % whether to set computational cache in separate folder
