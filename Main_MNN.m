@@ -116,7 +116,7 @@ dxArray              = Elongation_maxArray; % units of m
 MaxForceArray = [8]; % units of N
 
 % type of RNG for randomized behavior
-RNGtype = 'deterministic'; % options: 'dateandtime' 'deterministic' 'nocontrol'
+RNGtype = 'dateandtime'; % options: 'dateandtime' 'deterministic' 'nocontrol'
 
 
 % assemble BehaviorStruct
@@ -240,35 +240,70 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 % flag to save learning output
 IWantToSaveOutput = true;
 
+% flag to autoselect output
+    AutoSpecifyOutput = true;
+
 if IWantToSaveOutput
-    fileName = 'PlanarMeso_learningAbilityStudy';
-    fileType = '.mat';
-    t= datetime;
-    t.Format = 'yyyy-MM-dd_@_HHmm-ss';
-    t = char(t);
-    fullName = [fileName,'_','run@',t, fileType] ;
     
-    savePath = uigetdir(pwd,'Select output save location');
-    folderName = 'MNN_study';
-    fullPath = [savePath,'\',folderName,'\', fullName];
-    
-    mkdir([savePath,'\',folderName]);
+    % ouput location is specified automatically
+    if AutoSpecifyOutput
+        fileName = 'PlanarMeso_learningAbilityStudy';
+        fileType = '.mat';
+        t= datetime;
+        t.Format = 'yyyy-MM-dd_@_HHmm-ss';
+        t = char(t);
+        fullName = [fileName,'_','run@',t, fileType] ;
+
+        savePath = [pwd,'\Results'];
+        folderName = 'MNN_study';
+        fullPath = [savePath,'\',folderName,'\', fullName];
+
+        mkdir([savePath,'\',folderName]);
+
+    % output location is specified manually
+    else
+        fileName = 'PlanarMeso_learningAbilityStudy';
+        fileType = '.mat';
+        t= datetime;
+        t.Format = 'yyyy-MM-dd_@_HHmm-ss';
+        t = char(t);
+        fullName = [fileName,'_','run@',t, fileType] ;
+
+        savePath = uigetdir(pwd,'Select output save location');
+        folderName = 'MNN_study';
+        fullPath = [savePath,'\',folderName,'\', fullName];
+
+        mkdir([savePath,'\',folderName]);
+    end
+
 end
 
 %% select pregen behaviors
 
+AutoSelectBeh = true;
+AutoSelectedBehString = [pwd,'\SavedBehaviors\generalizedBehavior_3viapoints_run@2023-09-22_@_1448-31_1.mat']
+
 % only happens if caseType = 3
 if caseType == 3
-    
-    % TODO
-    % To improve
-    [fileList, dataPath] = uigetfile('*.mat','Select preset behavior','MultiSelect', 'on');
-    NumBehFiles = 1;
-    load([dataPath,fileList]);
-    BehaviorStruct.fileList = fileList;
-    BehaviorStruct.dataPath = dataPath;
-    NcasesArray = [PregenBehStruct.Ncases];
-    BehaviorStruct.NcasesArray = [PregenBehStruct.Ncases];
+
+    if AutoSelectBeh
+        load(AutoSelectedBehString);
+        % BehaviorStruct.fileList = fileList;
+        % BehaviorStruct.dataPath = dataPath;
+        NcasesArray = [PregenBehStruct.Ncases];
+        BehaviorStruct.NcasesArray = [PregenBehStruct.Ncases];
+        NumBehFiles = 1;
+    else
+        % TODO
+        % To improve
+        [fileList, dataPath] = uigetfile('*.mat','Select preset behavior','MultiSelect', 'on');
+        NumBehFiles = 1;
+        load([dataPath,fileList]);
+        BehaviorStruct.fileList = fileList;
+        BehaviorStruct.dataPath = dataPath;
+        NcasesArray = [PregenBehStruct.Ncases];
+        BehaviorStruct.NcasesArray = [PregenBehStruct.Ncases];
+    end
     
     % check if preset behavior and lattice geometry setting set in code
     % here are compatible
@@ -360,7 +395,11 @@ for NinputANDoutputIter = 1:length(NinputANDoutputArray)
                             
                             % load behavior if from file
                             if caseType == 3
-                                load([dataPath,fileList])
+                                if AutoSelectBeh
+                                    load(AutoSelectedBehString);
+                                else
+                                    load([dataPath,fileList])
+                                end
                                 BehaviorStruct.Target = PregenBehStruct.Target;
                                 BehaviorStruct.forces = PregenBehStruct.forces;
                                 BehaviorStruct.Ncases = PregenBehStruct.Ncases;
