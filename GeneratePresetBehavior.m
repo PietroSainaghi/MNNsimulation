@@ -82,7 +82,7 @@ caseType        = 4;  % 1) sinusoid behavior     2) random forces   4) generaliz
 
 % number of force behaviors in randomized behaviors 
 % number of discrete via points in generalized curve
-Ncases             = 3; 
+Ncases             = 11; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;

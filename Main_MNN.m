@@ -69,11 +69,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [8];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [8];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -87,7 +87,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -135,7 +135,7 @@ BehaviorStruct.RNGtype = RNGtype;
 ForceScaling        = false;
 
 % number of runs for each set of behaviors
-startPts            = 1;
+startPts            = 7;
 
 % select treshlod for desired precision
 % optimizer will converge when the difference between error iterations is
@@ -160,21 +160,25 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'discrete'; % 'discrete' or 'continuous'
+discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
+% PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
+PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
-optimizerArray = {'GA'}; % 'GA', 'SQP'
+    % GA: genetic algorithm, slowest but very accurate
+    % SQP: sequential quadratic programming, fastest but less inaccurate
+    
+optimizerArray = {'SQP'}; % 'GA', 'SQP'
 
 % Genetic Algorithm Options
 % Only used if optimizer is GA
 GApopulation = 250; % number of function evaluations each iteration
-GAgenerations = 2000000; % max number of iterations
-GAstallgenerations = 5000; % max number of iterations with same outcome for exit flag
+GAgenerations = 10000; % max number of iterations
+GAstallgenerations = 100; % max number of iterations with same outcome for exit flag
 GAparallelPool = false; % whether to use multithreaded optimizer (faster but more resource intensive)
 
 
@@ -241,7 +245,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = true;
+    AutoSpecifyOutput = false;
 
 if IWantToSaveOutput
     
@@ -280,8 +284,8 @@ end
 
 %% select pregen behaviors
 
-AutoSelectBeh = true;
-AutoSelectedBehString = [pwd,'\SavedBehaviors\generalizedBehavior_3viapoints_run@2023-09-22_@_1448-31_1.mat']
+AutoSelectBeh = false;
+AutoSelectedBehString = [pwd,'\SavedBehaviors\generalizedBehavior_3viapoints_run@2023-09-22_@_1448-31_1.mat'];
 
 % only happens if caseType = 3
 if caseType == 3

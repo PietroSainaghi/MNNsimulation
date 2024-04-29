@@ -206,6 +206,8 @@ for icIter = 1:startPts
                     ResultsStruct(icIter).elongationDiff = nonhomogeneous;
                     ResultsStruct(icIter).finalerror = finalerror;
                     ResultsStruct(icIter).coord_deformed = coorddeformed;
+                case 'discrete'
+                    error('SQP is incompatible with discrete stiffness datasets')
             end
             
     end % end algorithm switch
