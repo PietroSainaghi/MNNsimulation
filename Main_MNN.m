@@ -11,7 +11,7 @@ close all
 
 %% Add Function Folders
 
-addpath([pwd,'\Main_Functions'])
+addpath(genpath([pwd,'\Main_Functions']))
 
 %% Individual Link Parameters
 
@@ -135,7 +135,7 @@ BehaviorStruct.RNGtype = RNGtype;
 ForceScaling        = false;
 
 % number of runs for each set of behaviors
-startPts            = 7;
+startPts            = 1;
 
 % select treshlod for desired precision
 % optimizer will converge when the difference between error iterations is
@@ -171,7 +171,7 @@ PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
     % set as cell to test multiple ones at once
     % GA: genetic algorithm, slowest but very accurate
     % SQP: sequential quadratic programming, fastest but less inaccurate
-    
+
 optimizerArray = {'SQP'}; % 'GA', 'SQP'
 
 % Genetic Algorithm Options
