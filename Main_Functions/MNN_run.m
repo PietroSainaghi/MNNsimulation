@@ -26,7 +26,8 @@ startPts = OptimizerDataStruct.startPts; % [1] number of initial conditions for 
 optimizer = OptimizerDataStruct.optimizer;
 discORcont = OptimizerDataStruct.discORcont;
 PossibleStiffnessArray = OptimizerDataStruct.PossibleStiffnessArray;
-errorThreshold = OptimizerDataStruct.errorChangeThreshold;
+EnforceMaxElongation = OptimizerDataStruct.EnforceMaxElongation;
+
 
 
 %% MNN optimization
@@ -54,6 +55,7 @@ for icIter = 1:startPts
                     nvars = length(xInit);
                     population = OptimizerDataStruct.GApopulation;
                     generations = OptimizerDataStruct.GAgenerations;
+                    GAerrorChangeThreshold = OptimizerDataStruct.GAerrorChangeThreshold;
                     stallgenerations = OptimizerDataStruct.GAstallgenerations;
                     ParallelPool = OptimizerDataStruct.GAparallelPool;
                     % 'FunctionTolerance',errorThreshold,...
@@ -62,8 +64,8 @@ for icIter = 1:startPts
                         'PopulationSize',population, ...
                         'InitialPopulationMatrix', randomizedIndices',...
                         'MaxGenerations', generations,...
-                        'ConstraintTolerance',errorThreshold,...
-                        'FunctionTolerance',errorThreshold,...
+                        'ConstraintTolerance',GAerrorChangeThreshold,...
+                        'FunctionTolerance',GAerrorChangeThreshold,...
                         'MaxStallGenerations', stallgenerations,...
                         'UseParallel', ParallelPool,...
                         'OutputFcn',@gaoutfun); % saves output and population progression to .mat file(JANKY SOLUTION CAN BE IMPROVED)
@@ -72,7 +74,11 @@ for icIter = 1:startPts
                     fun = @(x) ERROR_discrete(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x,PossibleStiffnessArray);
                     
                     % constraint equation
-                    constraint = @(x) ELONGATION_discrete(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    if EnforceMaxElongation == true
+                        constraint = @(x) ELONGATION_discrete(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    elseif EnforceMaxElongation == false
+                        constraint = [];
+                    end
                     
                     % optimization using GA
                     disp('Starting Optimization')
@@ -118,6 +124,7 @@ for icIter = 1:startPts
                     population = OptimizerDataStruct.GApopulation;
                     generations = OptimizerDataStruct.GAgenerations;
                     stallgenerations = OptimizerDataStruct.GAstallgenerations;
+                    GAerrorChangeThreshold = OptimizerDataStruct.GAerrorChangeThreshold;
                     ParallelPool = OptimizerDataStruct.GAparallelPool;
                     % 'FunctionTolerance',errorThreshold,...
                     options = optimoptions('ga',...
@@ -125,14 +132,18 @@ for icIter = 1:startPts
                         'PopulationSize',population, ...
                         'InitialPopulationMatrix', randomizedIndices',...
                         'MaxGenerations', generations,...
-                        'ConstraintTolerance',errorThreshold,...
-                        'FunctionTolerance',errorThreshold,...
+                        'ConstraintTolerance',GAerrorChangeThreshold,...
+                        'FunctionTolerance',GAerrorChangeThreshold,...
                         'MaxStallGenerations', stallgenerations,...
                         'UseParallel', ParallelPool,...
                         'OutputFcn',@gaoutfun); % saves output and population progression to .mat file(JANKY SOLUTION CAN BE IMPROVED)
                     
                     % constraint equation
-                    constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
+                    if EnforceMaxElongation == true
+                        constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    elseif EnforceMaxElongation == false
+                        constraint = [];
+                    end
                     
                     % function to be optimized
                     fun = @(x) ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
@@ -166,6 +177,7 @@ for icIter = 1:startPts
             end % end discrete continuous switch
             
             
+        % sequential quadratic programming
         case 'SQP'
             
             switch discORcont
@@ -174,18 +186,25 @@ for icIter = 1:startPts
                     % upper and lower stiffness bounds
                     kLinMax = LinkPropertiesStruct.kLinMax;
                     kLinMin = LinkPropertiesStruct.kLinMin;
-                    
+
                     % optimization parameters
+                    SQPmaxIterations = OptimizerDataStruct.SQPmaxIterations;
+                    SQPmaxFunEvals = OptimizerDataStruct.SQPmaxFunEvals;
+                    SQPerrorChangeThreshold = OptimizerDataStruct.SQPerrorChangeThreshold;
                     options = optimoptions('fmincon',...
                         'Algorithm','sqp',...
                         'Display','iter',...
                         'PlotFcn','optimplotfval',...
-                        'MaxIterations',400,...,
-                        'MaxFunctionEvaluations',1e6,...,
-                        'TolConSQP',1e-5);
+                        'MaxIterations',SQPmaxIterations,...,
+                        'MaxFunctionEvaluations',SQPmaxFunEvals,...,
+                        'TolConSQP',SQPerrorChangeThreshold);
                     
                     % constraint equation
-                    constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
+                    if EnforceMaxElongation == true
+                        constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    elseif EnforceMaxElongation == false
+                        constraint = [];
+                    end
                     
                     % function to be optimized
                     fun = @(x) ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
@@ -209,7 +228,114 @@ for icIter = 1:startPts
                 case 'discrete'
                     error('SQP is incompatible with discrete stiffness datasets')
             end
-            
+
+        % pattern search (full matlab)
+        case 'FPS'
+            switch discORcont
+                case 'continuous'
+
+                    % upper and lower stiffness bounds
+                    kLinMax = LinkPropertiesStruct.kLinMax;
+                    kLinMin = LinkPropertiesStruct.kLinMin;
+
+                    % optimization parameters
+                    FPSerrorChangeThreshold = OptimizerDataStruct.FPSerrorChangeThreshold;
+                    FPSmaxIterations = OptimizerDataStruct.FPSmaxIterations;
+                    FPSsearchFunc = OptimizerDataStruct.FPSsearchFunc;
+                    FPSalgorithm = OptimizerDataStruct.FPSalgorithm;
+                    FPSParallelPool = OptimizerDataStruct.FPSParallelPool;
+                    options = optimoptions('patternsearch',...
+                        'Algorithm',FPSalgorithm,... % {"classic"} | "nups" | "nups-gps" | "nups-mads"
+                        'ConstraintTolerance',FPSerrorChangeThreshold,...
+                        'Display','iter',...
+                        'PlotFcn','psplotbestf',...
+                        'MaxIterations',FPSmaxIterations,...,
+                        'SearchFcn',FPSsearchFunc,... % "GPSPositiveBasis2N" | "GPSPositiveBasisNp1" | "GSSPositiveBasis2N" | "GSSPositiveBasisNp1" | "MADSPositiveBasis2N" | "MADSPositiveBasisNp1" | "searchga" | "searchlhs" | "searchneldermead" | "rbfsurrogate" | {[]} |
+                        'StepTolerance',FPSerrorChangeThreshold, ...
+                        'UseParallel',FPSParallelPool);
+
+                    % constraint equation
+                    if EnforceMaxElongation == true
+                        constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    elseif EnforceMaxElongation == false
+                        constraint = [];
+                    end
+
+                     % function to be optimized
+                    fun = @(x) ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+
+                    % perform optimization with full pattern search
+                    disp('Starting Optimization')
+                    [x,fval,exitflag,output] = patternsearch(fun,xInit,[],[],[],[],kLinMin,kLinMax,constraint,options);
+
+                    % validate
+                    finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    disp(['Final Error: ',num2str(finalerror)])
+                    [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
+                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    
+                    
+                    % output data
+                    ResultsStruct(icIter).x = x;
+                    ResultsStruct(icIter).elongationDiff = nonhomogeneous;
+                    ResultsStruct(icIter).finalerror = finalerror;
+                    ResultsStruct(icIter).coord_deformed = coorddeformed;
+
+
+                case 'discrete'
+                    error('FPS is incompatible with discrete stiffness datasets')    
+            end
+        case 'AGD'
+            switch discORcont
+                case 'continuous'
+
+                    % upper and lower stiffness bounds
+                    kLinMax = LinkPropertiesStruct.kLinMax;
+                    kLinMin = LinkPropertiesStruct.kLinMin;
+
+                    % constraint equation
+                    if EnforceMaxElongation == true
+                        constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
+                    elseif EnforceMaxElongation == false
+                        constraint = [];
+                    end
+
+                     % function to be optimized
+                    fun = @(x) ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+
+                    % perform optimization with full pattern search
+                    disp('Starting Optimization')
+                    analyticalGradientMethod;
+
+                    % validate
+                    finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    disp(['Final Error: ',num2str(finalerror)])
+                    [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
+                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    
+                    
+                    % output data
+                    ResultsStruct(icIter).x = x;
+                    ResultsStruct(icIter).elongationDiff = nonhomogeneous;
+                    ResultsStruct(icIter).finalerror = finalerror;
+                    ResultsStruct(icIter).coord_deformed = coorddeformed;
+
+
+                case 'discrete'
+                    error('AGD is incompatible with discrete stiffness datasets')    
+            end
+
+        % partial pattern search
+        case 'PPS'
+            switch discORcont
+                case 'continuous'
+
+                    % TODO not yet implemented 
+
+                    % run optimizer with PPS
+                    [xOpt, eOpt, bestPts, allPts] =  randPatternSearch( funPack, stepSize, stepFun, minStep, loopsToStep, deMin, allIter, typNoise, outlierMult, savePath, xRange, xInit)
+                case 'discrete'
+            end
     end % end algorithm switch
     
     % plot endpoints

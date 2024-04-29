@@ -134,13 +134,13 @@ BehaviorStruct.RNGtype = RNGtype;
 % force scaling
 ForceScaling        = false;
 
+% make a physically possible network
+    % max elongation in each beam will be contrained to be less than Elongation_maxArray
+    % some optimizers don't work well with the constraint setup
+EnforceMaxElongation = true;
+
 % number of runs for each set of behaviors
 startPts            = 1;
-
-% select treshlod for desired precision
-% optimizer will converge when the difference between error iterations is
-% less than the specified value
-errorChangeThreshold  = 1e-100;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -169,18 +169,38 @@ PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
+    % all performance evaluations depend on hyper-parameter tuning
     % GA: genetic algorithm, slowest but very accurate
-    % SQP: sequential quadratic programming, fastest but less inaccurate
+    % SQP: sequential quadratic programming, fast but less inaccurate
+    % FPS: pattern search using matlab function, fast and medium accuracy
+    % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
+    % AGD: analytical gradient method, developed by Jiaji Chen, fast
+optimizerArray = {'FPS'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
-optimizerArray = {'SQP'}; % 'GA', 'SQP'
-
-% Genetic Algorithm Options
+% Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
 GApopulation = 250; % number of function evaluations each iteration
 GAgenerations = 10000; % max number of iterations
 GAstallgenerations = 100; % max number of iterations with same outcome for exit flag
 GAparallelPool = false; % whether to use multithreaded optimizer (faster but more resource intensive)
+GAerrorChangeThreshold  = 1e-100; % change in error to indicate convergence
 
+% Sequential Quadratic Programming Hyper-Parameters
+% Only used if optimizer is SQP
+% TODO add other optimization parameters as well
+SQPmaxIterations = 400; % number of optimizer iterations
+SQPmaxFunEvals = 1e6; % maximum number of allowed function evaluations
+SQPerrorChangeThreshold = 1e-5; % change in error to indicate convergence
+
+% Full Pattern Search Hyper-Parameters
+FPSerrorChangeThreshold = 1e-6; % change in error to indicate convergence
+FPSmaxIterations = 1e6; % maximum iterations
+FPSsearchFunc = []; % possible pattern types for a given iteration, options: "GPSPositiveBasis2N" | "GPSPositiveBasisNp1" | "GSSPositiveBasis2N" | "GSSPositiveBasisNp1" | "MADSPositiveBasis2N" | "MADSPositiveBasisNp1" | "searchga" | "searchlhs" | "searchneldermead" | "rbfsurrogate" | {[]} |
+FPSalgorithm = 'classic'; % pattern search algorithms, options: {"classic"} | "nups" | "nups-gps" | "nups-mads"
+FPSParallelPool = false; % whether to use multithreaded optimizer (faster but more resource intensive)
+
+% Analytical Gradient Method Hyper-Parameters
+AGDmaxIterations = 1000;
 
 % whether to set computational cache in separate folder
 % will be same as results if false
@@ -191,8 +211,8 @@ SpecifyCache = 0;
 
 % assemble OptimizerDataStruct
 OptimizerDataStruct.ForceScaling = ForceScaling;
+OptimizerDataStruct.EnforceMaxElongation = EnforceMaxElongation;
 OptimizerDataStruct.startPts = startPts;
-OptimizerDataStruct.errorChangeThreshold = errorChangeThreshold;
 OptimizerDataStruct.icType = icType;
 OptimizerDataStruct.doScaleMSE = doScaleMSE;
 OptimizerDataStruct.discORcont = discORcont;
@@ -201,12 +221,20 @@ OptimizerDataStruct.deterministicRNG = deterministicRNG;
 OptimizerDataStruct.PossibleStiffnessArray = PossibleStiffnessArray;
 OptimizerDataStruct.MSEunits = MSEunits;
 OptimizerDataStruct.SpecifyCache = SpecifyCache;
+OptimizerDataStruct.GAerrorChangeThreshold = GAerrorChangeThreshold;
 OptimizerDataStruct.GApopulation = GApopulation;
 OptimizerDataStruct.GAgenerations = GAgenerations;
 OptimizerDataStruct.GAstallgenerations = GAstallgenerations;
 OptimizerDataStruct.GAparallelPool = GAparallelPool;
 OptimizerDataStruct.RNGseedMult = RNGseedMult;
-
+OptimizerDataStruct.SQPmaxIterations = SQPmaxIterations;
+OptimizerDataStruct.SQPmaxFunEvals = SQPmaxFunEvals;
+OptimizerDataStruct.SQPerrorChangeThreshold = SQPerrorChangeThreshold;
+OptimizerDataStruct.FPSerrorChangeThreshold = FPSerrorChangeThreshold;
+OptimizerDataStruct.FPSmaxIterations = FPSmaxIterations;
+OptimizerDataStruct.FPSsearchFunc = FPSsearchFunc;
+OptimizerDataStruct.FPSalgorithm = FPSalgorithm;
+OptimizerDataStruct.FPSParallelPool = FPSParallelPool;
 
 %% Plotting Options Configuration
 
@@ -311,7 +339,7 @@ if caseType == 3
     
     % check if preset behavior and lattice geometry setting set in code
     % here are compatible
-    if (length(LatticeGeometryStruct.NinputANDoutputArray) > 1) || (length(LatticeGeometryStruct.NinputANDoutputArray) > 1)
+    if (length(LatticeGeometryStruct.NinputANDoutputArray) > 1) || (length(LatticeGeometryStruct.NlayersArray) > 1)
         error('You must only specify one lattice size if you are using preset behaviors')
     end
     if LatticeGeometryStruct.NinputANDoutputArray ~= PregenBehStruct.NinputANDoutput
