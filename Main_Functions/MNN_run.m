@@ -289,23 +289,10 @@ for icIter = 1:startPts
             switch discORcont
                 case 'continuous'
 
-                    % upper and lower stiffness bounds
-                    kLinMax = LinkPropertiesStruct.kLinMax;
-                    kLinMin = LinkPropertiesStruct.kLinMin;
+                    [K]=FEM_matrices(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct);
 
-                    % constraint equation
-                    if EnforceMaxElongation == true
-                        constraint = @(x) ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x,PossibleStiffnessArray);
-                    elseif EnforceMaxElongation == false
-                        constraint = [];
-                    end
-
-                     % function to be optimized
-                    fun = @(x) ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-
-                    % perform optimization with full pattern search
                     disp('Starting Optimization')
-                    analyticalGradientMethod;
+                    [x] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
 
                     % validate
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);

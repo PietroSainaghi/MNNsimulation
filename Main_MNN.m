@@ -175,7 +175,7 @@ PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'FPS'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'AGD'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
@@ -273,7 +273,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = false;
+    AutoSpecifyOutput = true;
 
 if IWantToSaveOutput
     

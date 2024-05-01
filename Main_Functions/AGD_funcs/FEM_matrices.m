@@ -1,4 +1,4 @@
-function [coorddeformed,Kf2u,Ku2f]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
+function [K]=FEM_matrices(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct)
 
 % author: Pietro Sainaghi
 % original program written by Reinier Kuppens and Ryan Lee
@@ -43,32 +43,9 @@ k=(zeros(2*DOI,2*DOI,Nbeams));
 Ncases = size(F,2);
 for e=1:Nbeams
     %scale the stiffnes accoding to x
-    k(:,:,e)=k_base(:,:,e)*diag([x(e) 1 1 x(e) 1 1]); % USE mtimesx?
+    % k(:,:,e)=k_base(:,:,e)*diag([x(e) 1 1 x(e) 1 1]); % USE mtimesx?
+    k(:,:,e)=[10000 0 0 -10000 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; -10000 0 0 10000 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0]; % USE mtimesx?
     %Combine stiffness matrix for solving
     K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
 end
-% take out inversion to use sparse instead
-% Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
-U=(zeros(DOFFinal,Ncases));
-U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
-
-for j=1:Ncases
-    % sparse matrix inversion
-    Ksub=K(Final,Final);
-    U(:,j)=Ksub\F(Final,j);
-    i2=1;
-    for i=DOFnodes %loop through the nodes that are not fixed
-        U2(i,:,j)=transpose(U(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
-        i2=i2+1;
-    end
-    
-    coorddeformed(:,:,j)=coord_initial+U2(:,:,j);
-
-end
-
-% extract stiffness matrices
-Ku2f = K;
-% Kf2u = inv(K); % NOTE this is the correct formula but it's commented out to keep code running fast
-Kf2u = K; % WRONG but UNUSED
-
 end
