@@ -1,10 +1,11 @@
-function [K]=FEM_matrices(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct)
+function [K_contribution] = invertStiffnessMatrix2AxialStiffness(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct)
+
 
 % author: Pietro Sainaghi
-% original program written by Reinier Kuppens and Ryan Lee
+% using architecture written by Erwin Muelder and Ryan Lee
 
-% this function evaluates the deformed configuration of the lattice for
-% each behavior using the finite truss method
+% this function evaluates the matrix terms needed to invert a given resulting MNN stiffness matrix
+% to compute axial stiffness values for each beam
 
 %% function inputs
 
@@ -26,26 +27,39 @@ R6 = FEMStruct.R6;
 RT6 = FEMStruct.RT6;
 DOF = FEMStruct.DOF; % [1] number of degrees of freedom in system
 Degrees_per_element = FEMStruct.Degrees_per_element;
-Final = FEMStruct.Final;
+
 
 % optimization problem structure - OptimizerDataStruct
 % ForceScaling = OptimizerDataStruct.ForceScaling; % [boolean] yes or no to force scaling
 
 %% function outputs
 
-coorddeformed=zeros(Ncoord,DOI,Ncases);
+% K_contribution [DOF,DOF,Nbeams] for each tunable beam, the imaginary terms show what entries are changed by the tuning, used to contruct an invertible matrix
 
 
-%% computation
-Ncoord = size(coord_initial,1);
-K=(zeros(DOF));
-k=(zeros(2*DOI,2*DOI,Nbeams));
-Ncases = size(F,2);
+%% create stiffness contribution matrices
+
+% generates a 
+
+% store contribution to stiffness matrix from each individual axial stiffness
+K_contribution=zeros(DOF,DOF,Nbeams);
+% stiffness matrix for individual beam with control stiffness value
+k_beam=(zeros(2*DOI,2*DOI,Nbeams));
+
 for e=1:Nbeams
     %scale the stiffnes accoding to x
-    % k(:,:,e)=k_base(:,:,e)*diag([x(e) 1 1 x(e) 1 1]); % USE mtimesx?
-    k(:,:,e)=[10000 0 0 -10000 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; -10000 0 0 10000 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0]; % USE mtimesx?
+    k_beam(:,:,e)=k_base(:,:,e)*diag([sqrt(-1) 1 1 sqrt(-1) 1 1]); % USE mtimesx?
     %Combine stiffness matrix for solving
-    K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
+    K_contribution(Degrees_per_element(e,:),Degrees_per_element(e,:),e)=RT6(:,:,e)*k_beam(:,:,e)*R6(:,:,e);
 end
+
+%% identify indices contribution for each 
+
+
+
+
+
+
 end
+
+

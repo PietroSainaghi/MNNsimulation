@@ -1,4 +1,4 @@
-function [coorddeformed,Kf2u,Ku2f]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
+function [coorddeformed,Kdof,Fdof,udof]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
 
 % author: Pietro Sainaghi
 % original program written by Reinier Kuppens and Ryan Lee
@@ -19,7 +19,7 @@ Ncases = BehaviorStruct.Ncases;
 
 % finite truss structure - FEMStruct
 DOFnodes = FEMStruct.DOFnodes; % [] indices of nodes that are not grounded
-DOFFinal = FEMStruct.DOFFinal;
+DOFFinal = FEMStruct.DOFFinal; % [] indices of DOF that are not grounded
 F = FEMStruct.F; % [NDOF, Ncases] location and value of forces within degrees of freedom format for each behavior
 k_base = FEMStruct.k_base; % [6,6] stiffness matrix of individual element
 R6 = FEMStruct.R6;
@@ -66,9 +66,11 @@ for j=1:Ncases
 
 end
 
-% extract stiffness matrices
-Ku2f = K;
-% Kf2u = inv(K); % NOTE this is the correct formula but it's commented out to keep code running fast
-Kf2u = K; % WRONG but UNUSED
+% extract stiffness matrix
+Kdof = Ksub;
+% extract input forces in dof format
+Fdof = F(Final,:);
+% extract final displacements in dof format
+udof = U;
 
 end

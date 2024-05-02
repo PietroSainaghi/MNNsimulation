@@ -289,8 +289,6 @@ for icIter = 1:startPts
             switch discORcont
                 case 'continuous'
 
-                    [K]=FEM_matrices(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct);
-
                     disp('Starting Optimization')
                     [x] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
 
