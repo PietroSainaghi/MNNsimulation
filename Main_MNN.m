@@ -113,7 +113,7 @@ dxArray              = Elongation_maxArray; % units of m
 % maximum allowed input force
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-MaxForceArray = [8]; % units of N
+MaxForceArray = [2]; % units of N
 
 % type of RNG for randomized behavior
 RNGtype = 'dateandtime'; % options: 'dateandtime' 'deterministic' 'nocontrol'
@@ -137,7 +137,7 @@ ForceScaling        = false;
 % make a physically possible network
     % max elongation in each beam will be contrained to be less than Elongation_maxArray
     % some optimizers don't work well with the constraint setup
-EnforceMaxElongation = true;
+EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
 startPts            = 1;
@@ -254,7 +254,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 1;
+plotEndpoints = 0;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 

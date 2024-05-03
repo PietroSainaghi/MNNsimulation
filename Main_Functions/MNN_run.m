@@ -211,7 +211,7 @@ for icIter = 1:startPts
                     
                     % optimization using SQP
                     disp('Starting Optimization')
-                    [x,fval,exitflag,output] = fmincon(fun,xInit,[],[],[],[],kLinMin,kLinMax,constraint,options);
+                    [x,fval,exitflag,output] = fmincon(fun,xInit,[],[],[],[],kLinMin*ones(length(xInit),1),kLinMax*ones(length(xInit),1),constraint,options);
                     
                     % validate
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);

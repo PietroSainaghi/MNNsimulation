@@ -26,7 +26,7 @@ R6 = FEMStruct.R6;
 RT6 = FEMStruct.RT6;
 DOF = FEMStruct.DOF; % [1] number of degrees of freedom in system
 Degrees_per_element = FEMStruct.Degrees_per_element;
-Final = FEMStruct.Final;
+Final = FEMStruct.Final; % [NDOFnodes] % indices of nodes that are free to move
 
 % optimization problem structure - OptimizerDataStruct
 % ForceScaling = OptimizerDataStruct.ForceScaling; % [boolean] yes or no to force scaling
