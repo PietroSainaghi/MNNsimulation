@@ -10,14 +10,21 @@ function [x] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStr
 
 % optimizer structure - OptimizerDataStruct
 % iterMAX = OptimizerDataStruct.AGDmaxIterations;
-iterMAX = 2000;
-learningRate = 100000; % Learning Rate
-Decay_interval = 100; % Learning rate decay interval
-Decay_factor = 5; % Learning rate decay factor
+
+learningRate = 1; % Learning Rate
+Decay_interval = 400; % Learning rate decay interval
+Decay_factor = 1; % Learning rate decay factor
 % Batch_num = 1; % Minibatch size UNUSED but shows up in original algorithm
-MSEscale = 25; % scaling term for MSE used in algorthm
-MSEthreshold = 1e-5;
-ChainRuleMultiplier = 1;
+MSEscale = 1; % scaling term for MSE used in algorthm
+
+% termination conditions
+iterMAX = 200000; % maximum iterations
+MSEChangethreshold = 1e-7; % minimum change in MSE
+MSEthreshold = 0.001; % target MSE
+averageWindow = 400;
+averageWindowFrequency = 5000;
+averageWindowThreshold = 1e-4;
+
 
 % behavior structure - BehaviorStruct
 Ncases = BehaviorStruct.Ncases; % [1] number of force behaviors to optimize towards
@@ -42,48 +49,37 @@ kLinMax = LinkPropertiesStruct.kLinMax;
 kLinMin = LinkPropertiesStruct.kLinMin;
 
 
-%% Explanation of variables
+%% Initialize length parameters
 
 % NDOFnodes [] number of nodes that are not grounded
 NDOFnodes = length(DOFnodes);
 % NDOF [] numebr of degrees of freedom
 NDOF = NDOFnodes*DOI;
 
-% dLdu [NinputANDoutput*2,Ncases] stores derivatives of cost wrt output displacements (x and y) for each behavior
-dLdu = zeros(NinputANDoutput*size(Target,2),Ncases);
-% F [NDOFnodes*DOI,Ncases] stores force and moment inputs at each node, for each behavior
-F = zeros(NDOFnodes*DOI,Ncases);
-% u [NDOFnodes*DOI,Ncases] stores displacements (x and y) and rotations (in plane) for each node
-u = zeros(NDOFnodes*DOI,Ncases);
-% K [NDOFnodes*DOI,NDOFnodes*DOI] stiffness matrix
-K = zeros(NDOFnodes*DOI,NDOFnodes*DOI);
-% dFdu [NDOFnodes*DOI,Ncases,NDOFnodes*DOI,Ncases] derivative of force wrt displacements, defined as F and u above
-dFdu = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,Ncases);
-% dudF [NDOFnodes*DOI,NDOFnodes*DOI] derivative of displacement wrt force, dudF = -(dFdu)^-1, see derivation
-dudF = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,Ncases);
-% dFdK [NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI] derivative of force wrt stiffness, defined as F and K above; data structure is redundant, [NDOFnodes*DOI,NDOFnodes*DOI] is valid as there's zero terms for all times first and second indices are different, see derivation slides
-dFdK = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
-% dudK [NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI] derivative of displacement wrt stiffness, defined as u and K above
-dudK = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
-% duoutdK [NinputANDoutput*2,Ncases,NDOFnodes*DOI,NDOFnodes*DOI] derivative of output displacements wrt stiffness, subset of dudK
-duoutdK = zeros(NinputANDoutput*size(Target,2),Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
-% dLdK [NDOFnodes*DOI,NDOFnodes*DOI] derivative of cost function wrt stiffness, defined as L and K above
-dLdK = zeros(NDOFnodes*DOI,NDOFnodes*DOI);
-% dKdx [NDOFnodes*DOI,NDOFnodes*DOI,Nbeams] derivative of stiffness wrt control stiffness values
-dKdx = zeros(NDOFnodes*DOI,NDOFnodes*DOI,Nbeams);
-% dLdx [Nbeams] derivative of cost function wrt control stiffness values
-dLdx = zeros(Nbeams,1);
+
 
 %% generate K to x inversion function
 
+% initialize stiffness matrix derivative
+dKdx_matrix = zeros(NDOF,NDOF,length(xInit));
+
 [stiffnessMatrixDerivative] = computeStiffnessMatrixDerivative(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct);
-if size(stiffnessMatrixDerivative) == size(dKdx)
-    dKdx = stiffnessMatrixDerivative;
+if size(stiffnessMatrixDerivative) == size(dKdx_matrix)
+    dKdx_matrix = stiffnessMatrixDerivative;
 else
     error('Issue with computing derivative of stiffness wrt tunable beams')
 end
 
-%% contruct relationship matrix between DOF and output mateices
+% repackage in matrix form
+dKdx = zeros(length(xInit),NDOF^2);
+for xIDX = 1:size(dKdx_matrix,3)
+    for KIDX = 1:size(dKdx_matrix,1)
+        dKdx(xIDX, NDOF*(KIDX-1)+1 : NDOF*(KIDX) ) = dKdx_matrix(KIDX,:,xIDX);
+    end
+end
+
+
+%% contruct relationship matrix between DOF and output matrices
 
 % identify indices in NDOFnodes format corresponding to output nodes
 outINDOF_indices = [];
@@ -99,7 +95,7 @@ end
 %% initialize time history storage 
 
 % list of loss function value at each iteration
-MSE_hist = []; 
+MSE_hist = [1]; 
 
 % history of stiffness combinations
 Stiffness_hist = [];
@@ -117,15 +113,10 @@ MSEchange = 10;
 
 figure('Name','AGD')
 
-while MSEchange > MSEthreshold
+while MSEchange > MSEChangethreshold
 
     % update iteration
     iter = iter + 1;
-
-    % update learning rate based on decay factor
-    % if mod(iter, Decay_interval == 0)
-    %     learningRate = learningRate/Decay_factor;
-    % end
 
     % store stiffness combination for each iteration
     Stiffness_hist = [Stiffness_hist x];
@@ -139,16 +130,22 @@ while MSEchange > MSEthreshold
     % store loss in vector to plot
     MSE_hist = [MSE_hist MSE];
 
+    % compute change in MSE
+    MSEchange = abs(MSE_hist(end-1) - MSE_hist(end));
+    if MSEchange < MSEChangethreshold
+        disp('Termination: Reached error change threshold')
+    end
+
+
+
     % extract FEM properties used in algorithm
     [coorddeformed,Kdof,Fdof,udof]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-    K = Kdof;
     F = Fdof;
     u = udof;
 
-    % check if an impossible stiffness matrix is generated
-    % good for debugging
-    if norm(Fdof-Kdof*udof) > 1e-10
-        error('Stiffness matrix is wrong');
+    % repackage stiffness matrix into vector
+    for KIDX = 1:size(dKdx_matrix,1)
+        K(NDOF*(KIDX-1)+1 : NDOF*(KIDX) ,1) = Kdof(KIDX,:);
     end
 
     % store all displacements, including grounds
@@ -185,8 +182,8 @@ while MSEchange > MSEthreshold
             end
         end
     end
-   
-    % compute dLdu
+
+    % compute derivative of cost function with respect to output displacements
     dLdu = zeros(NinputANDoutput*size(Target,2),Ncases);
     for behIDX = 1:Ncases
         for outDOFIDX = 1:(NinputANDoutput*size(Target,2))
@@ -194,93 +191,76 @@ while MSEchange > MSEthreshold
         end
     end
 
-    % % compute dFdu (linear)
-    % dFdu = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,Ncases);
-    % for FdofIDX = 1:NDOF
-    %     for FbehIDX = 1:Ncases
-    %         for udofIDX = 1:NDOF
-    %             for ubehIDX = 1:Ncases
-    %                 for dummyIDX = 1:NDOF
-    %                     dFdu(FdofIDX,FbehIDX,udofIDX,ubehIDX) = dFdu(FdofIDX,FbehIDX,udofIDX,ubehIDX) + K(FdofIDX,dummyIDX) * (dummyIDX == udofIDX) * (FbehIDX == ubehIDX);
-    %                 end
-    %             end
-    %         end
-    %     end
-    % end
-    % 
-    % % compute dFdK
-    % dFdK = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
-    % for FdofIDX = 1:NDOF
-    %     for FbehIDX = 1:Ncases
-    %         for KdofIDX1 = 1:NDOF
-    %             for KdofIDX2 = 1:NDOF
-    %                 for dummyIDX = 1:NDOF
-    %                     dFdK(FdofIDX,FbehIDX,KdofIDX1,KdofIDX2) = dFdK(FdofIDX,FbehIDX,KdofIDX1,KdofIDX2) + (FdofIDX == KdofIDX1) * (dummyIDX == KdofIDX2) * u(dummyIDX,FbehIDX);
-    %                 end
-    %             end
-    %         end
-    %     end
-    % end
+    % compute derivative of force wrt displacement
+    dFdu = zeros(NDOF,NDOF);
+    % dFdu = Kdof'; % TEST
+    dFdu = Kdof;
 
-    % compute dudK
-    dudK = zeros(NDOFnodes*DOI,Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
-    for ubehIDX = 1:Ncases
-        for KdofIDX1 = 1:NDOF
-            for KdofIDX2 = 1:NDOF
-                for FdofIDX = 1:NDOF
-                    for FbehIDX = 1:Ncases
-                        if (ubehIDX == FbehIDX) && (FdofIDX == KdofIDX1)
-                            D = -K\u(:,ubehIDX);
-                        else
-                            D = zeros(NDOF,1);
-                        end
-                        dudK(:,ubehIDX,KdofIDX1,KdofIDX2) = dudK(:,ubehIDX,KdofIDX1,KdofIDX2) + D;
+    % compute derivative of force wrt stiffness
+    dFdK = zeros(NDOF,NDOF^2,Ncases);
+    for behIDX = 1:Ncases
+        for dofIDX = 1:(NDOF)
+            for kIDX = 1:(NDOF^2)
+                % identity of entry is nonzero
+                rowdivisor = ceil(kIDX/NDOF);
+                if rowdivisor == dofIDX
+                    % select specific entry in u
+                    nonzeroIDX = mod(kIDX,NDOF);
+                    if nonzeroIDX == 0
+                        nonzeroIDX = 24;
                     end
+                    selectionVec = zeros(1,NDOF);
+                    selectionVec(nonzeroIDX) = 1;
+                    % compute nonzero entry
+                    dFdK(dofIDX,kIDX,behIDX) = u(nonzeroIDX,behIDX);
                 end
             end
         end
     end
 
-    % compute duoutdK
-    duoutdK = zeros(NinputANDoutput*size(Target,2),Ncases,NDOFnodes*DOI,NDOFnodes*DOI);
+    % compute derivative of displacement with respect to stiffness
+    dudK = zeros(NDOF,NDOF^2,Ncases);
+    for behIDX = 1:Ncases
+        dudK(:,:,behIDX) = dFdu\-dFdK(:,:,behIDX);
+    end
+
+    % compute derivative of output displacements with respect to stiffnesssi
+    duoutdK = zeros(NinputANDoutput*size(Target,2),NDOF^2,Ncases);
     for outIDX = 1:length(outINDOF_indices)
-        duoutdK((outIDX-1)*2+1,:,:,:) = dudK(outINDOF_indices(outIDX)*3 - 2,:,:,:);
-        duoutdK((outIDX-1)*2+2,:,:,:) = dudK(outINDOF_indices(outIDX)*3 - 1,:,:,:);
+        duoutdK((outIDX-1)*2+1,:) = dudK(outINDOF_indices(outIDX)*3 - 2,:);
+        duoutdK((outIDX-1)*2+2,:) = dudK(outINDOF_indices(outIDX)*3 - 1,:);
     end
-    
-    % compute dLdK
-    dLdK = zeros(NDOFnodes*DOI,NDOFnodes*DOI);
-    for KdofIDX1 = 1:NDOF
-        for KdofIDX2 = 1:NDOF
-            for udofIDX = 1:(NinputANDoutput*size(Target,2))
-                for ubehIDX = 1:Ncases
-                    dLdK(KdofIDX1,KdofIDX2) = dLdK(KdofIDX1,KdofIDX2) + dLdu(udofIDX,ubehIDX) * duoutdK(udofIDX,ubehIDX,KdofIDX1,KdofIDX2);
-                end
-            end
-        end
-    end
-    dLdK = dLdK .* ChainRuleMultiplier;
 
-    % compute dLdx
-    dLdx = zeros(Nbeams,1);
-    for xIDX = 1:Nbeams
-        for KdofIDX1 = 1:NDOF
-            for KdofIDX2 = 1:NDOF
-                dLdx(xIDX) = dLdx(xIDX) + dLdK(KdofIDX1,KdofIDX2) * dKdx(KdofIDX1,KdofIDX2,xIDX);
-            end
-        end
+    % compute derivative of cost function with respect to stiffness
+    dLdK_store = zeros(NinputANDoutput*size(Target,2),NDOF^2,Ncases);
+    dLdK = zeros(NDOF^2,1,Ncases);
+    for behIDX = 1:Ncases
+        dLdK_store(:,:,behIDX) = duoutdK(:,:,behIDX).*dLdu(:,behIDX);
+        dLdK(:,:,behIDX) = sum(dLdK_store(:,:,behIDX))';
     end
-    dLdx = dLdx .* ChainRuleMultiplier;
+
+    % compute derivative of cost function with respect to beam value
+    dLdx = zeros(length(xInit),1,Ncases);
+    for behIDX = 1:Ncases
+        dLdx(:,:,behIDX) = dKdx*dLdK(:,:,behIDX);
+    end
+
+    % compute unit scaling term
+    largestterm = max(nonzeros(dLdx));
+    smallestterm = min(nonzeros(dLdx));
+    unitscaler = 1/largestterm;
 
     % compute gradient descent
-    x = x - learningRate * dLdx;
+    for behIDX = 1:Ncases
+        x = x - unitscaler * learningRate * dLdx(:,:,behIDX);
+    end
 
     % enforce maximum and minimum stiffness
     for xIDX = 1:length(x)
         if x(xIDX) > kLinMax
-            x(xIDX) = kLinMax;
+            x(xIDX) = kLinMax*0.9;
         elseif x(xIDX) < kLinMin
-            x(xIDX) = kLinMin;
+            x(xIDX) = kLinMin*0.9;
         end
     end
 
@@ -288,11 +268,28 @@ while MSEchange > MSEthreshold
     plot(MSE_hist)
     xlabel('Iteration')
     ylabel('MSE')
+    title([num2str(MSE)])
     drawnow
 
     if iter > iterMAX
         MSEchange = 0;
+        disp('Termination: Maximum Number of Iterations')
     end
+
+    if MSE < MSEthreshold
+        MSEchange = 0;
+        disp('Termination: Target MSE reached')
+    end
+
+    if mod(iter, averageWindowFrequency) == 0
+        valueWindows = MSE_hist((end-averageWindow):end);
+        MSEAVwindchange = max([abs(max(valueWindows)-mean(valueWindows)) abs(min(valueWindows)-mean(valueWindows))]);
+        if MSEAVwindchange < averageWindowThreshold
+            MSEchange = 0;
+            disp('Termination: Variation in Iteration Window is less than threshold')
+        end
+    end
+
 
 end
 
