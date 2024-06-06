@@ -69,11 +69,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [2];
+NinputANDoutputArray      = [3];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [2];
+NlayersArray              = [3];
 
 % dimensions in space
 DOI = 3;
@@ -254,7 +254,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 

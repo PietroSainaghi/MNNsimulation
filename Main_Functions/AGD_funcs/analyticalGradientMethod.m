@@ -1,4 +1,4 @@
-function [x] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit)
+function [xOut] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit)
 
 % Algorithm by Jiaji Chen to work with mass-spring model, rewritten for finite truss model by Pietro Sainaghi
 
@@ -19,11 +19,17 @@ MSEscale = 1; % scaling term for MSE used in algorthm
 
 % termination conditions
 iterMAX = 200000; % maximum iterations
-MSEChangethreshold = 1e-7; % minimum change in MSE
+MSEChangethreshold = 1e-8; % minimum change in MSE
 MSEthreshold = 0.001; % target MSE
-averageWindow = 400;
-averageWindowFrequency = 5000;
-averageWindowThreshold = 1e-4;
+averageWindow = 400; % window to look back at plateau intervals
+averageWindowFrequency = 5000; % frequency of checks for plateau intervals
+averageWindowThreshold = 1e-4; % variation threshold at plateau intervals
+chaosThreshold = 1;
+
+% plateau protection
+checkPlateauWindow = 200;
+plateauVarianceThreshold = 1e-3;
+LearningRateMultiplier = 2;
 
 
 % behavior structure - BehaviorStruct
@@ -97,8 +103,11 @@ end
 % list of loss function value at each iteration
 MSE_hist = [1]; 
 
+% list MSE rate
+MSE_rate = [1];
+
 % history of stiffness combinations
-Stiffness_hist = [];
+Stiffness_hist = [xInit];
 
 
 %% Optmizer Loop
@@ -110,6 +119,9 @@ x = xInit; % column vector
 iter = 1;
 % start change in error
 MSEchange = 10;
+
+% change in learning rate flag
+MultLearningRateFlag = false;
 
 figure('Name','AGD')
 
@@ -136,7 +148,8 @@ while MSEchange > MSEChangethreshold
         disp('Termination: Reached error change threshold')
     end
 
-
+    % store MSE rate in vector to plot
+    MSE_rate = [MSE_rate MSEchange];
 
     % extract FEM properties used in algorithm
     [coorddeformed,Kdof,Fdof,udof]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
@@ -207,7 +220,7 @@ while MSEchange > MSEChangethreshold
                     % select specific entry in u
                     nonzeroIDX = mod(kIDX,NDOF);
                     if nonzeroIDX == 0
-                        nonzeroIDX = 24;
+                        nonzeroIDX = NDOF;
                     end
                     selectionVec = zeros(1,NDOF);
                     selectionVec(nonzeroIDX) = 1;
@@ -217,6 +230,17 @@ while MSEchange > MSEChangethreshold
             end
         end
     end
+    dFdK_old = dFdK;
+    dFdK = zeros(NDOF,NDOF^2,Ncases);
+    for behIDX = 1:Ncases
+        for dofIDX = 1:(NDOF)
+            dFdK(dofIDX, ((dofIDX-1)*NDOF+1) : (dofIDX*NDOF) , behIDX) = u(:,behIDX)';
+        end
+    end
+    if min(min(min(dFdK_old == dFdK))) == 0
+        disp('packing error')
+    end
+
 
     % compute derivative of displacement with respect to stiffness
     dudK = zeros(NDOF,NDOF^2,Ncases);
@@ -259,16 +283,26 @@ while MSEchange > MSEChangethreshold
     for xIDX = 1:length(x)
         if x(xIDX) > kLinMax
             x(xIDX) = kLinMax*0.9;
+            disp('Hit an upper bound')
         elseif x(xIDX) < kLinMin
             x(xIDX) = kLinMin*0.9;
+            disp('Hit a lower bound')
         end
     end
 
-    
+    subplot(2,1,1)
     plot(MSE_hist)
     xlabel('Iteration')
     ylabel('MSE')
     title([num2str(MSE)])
+    set(gca, 'YScale', 'log')
+    drawnow
+    subplot(2,1,2)
+    plot(MSE_rate)
+    xlabel('Iteration')
+    ylabel('MSE Rate')
+    title([num2str(MSEchange)])
+    set(gca, 'YScale', 'log')
     drawnow
 
     if iter > iterMAX
@@ -290,8 +324,29 @@ while MSEchange > MSEChangethreshold
         end
     end
 
+    if (iter > 1000) && (MSE_hist(end) > MSE_hist(end-1)) && (abs(MSE_hist(end) - MSE_hist(end-1)) > chaosThreshold)
+        MSEchange = 0;
+        disp('Termination: Chaos')
+    end
+
+    if (mod(iter,checkPlateauWindow) == 0) && (MultLearningRateFlag == false) && (MSE > 0.05)
+        if abs(max(MSE_rate( (iter-checkPlateauWindow+1) : checkPlateauWindow))) < plateauVarianceThreshold
+            learningRate = learningRate * LearningRateMultiplier;
+            MultLearningRateFlag = true;
+            disp('Plateau Protection')
+        end
+    end
+    if (mod(iter,checkPlateauWindow) == (checkPlateauWindow*0.5)) && (MultLearningRateFlag == true)
+        learningRate = learningRate / LearningRateMultiplier;
+        MultLearningRateFlag = false;
+    end
+
+
 
 end
+
+[minErr minIDX] = min(MSE_hist);
+xOut = Stiffness_hist(:,minIDX);
 
 disp('Finished Optimization')
 
