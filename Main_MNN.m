@@ -69,11 +69,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [3];
+NinputANDoutputArray      = [7];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [3];
+NlayersArray              = [7];
 
 % dimensions in space
 DOI = 3;
@@ -140,7 +140,7 @@ ForceScaling        = false;
 EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
-startPts            = 1;
+startPts            = 50;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -175,7 +175,7 @@ PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'AGD'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
@@ -242,7 +242,7 @@ OptimizerDataStruct.FPSParallelPool = FPSParallelPool;
     % Not yet implemented
 scalingterm = 1;
 
-% plot undeformed lattice
+% plot undeformed lattice configuration
 plotUndeformed = 1;
 
 % plot stiffness combinations in lattice
@@ -254,7 +254,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 1;
+plotEndpoints = 0;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 
@@ -273,7 +273,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = true;
+    AutoSpecifyOutput = false;
 
 if IWantToSaveOutput
     
