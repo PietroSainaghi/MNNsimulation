@@ -12,7 +12,7 @@ close all
 
 %% Add Function Folders
 
-addpath([pwd,'\Main_Functions'])
+addpath(genpath([pwd,'\Main_Functions']))
 
 %% Configure settings for created behaviors
 
@@ -82,7 +82,7 @@ caseType        = 4;  % 1) sinusoid behavior     2) random forces   4) generaliz
 
 % number of force behaviors in randomized behaviors 
 % number of discrete via points in generalized curve
-Ncases             = 11; 
+Ncases             = 5; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;

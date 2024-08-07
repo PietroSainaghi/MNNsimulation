@@ -37,7 +37,13 @@ for icIter = 1:startPts
     disp(['Initial Conditions Iteration Number: ',num2str(icIter),' / ',num2str(startPts)])
     % set randomized initial conditions
     [xInit, randomizedIndices] = setInitialConditions(LinkPropertiesStruct,LatticeGeometryStruct,OptimizerDataStruct,icIter);
-    
+
+    % plot lattice configuration
+    if plotOptionsStruct.plotUndeformed
+        x = zeros(length(xInit),1);
+        plotColoredStiffnessValues(LinkPropertiesStruct, LatticeGeometryStruct, x, 'Main_Functions\PlottingFunctions\colormap.mat');
+    end
+
     % run optimization study
     switch optimizer
         
@@ -294,7 +300,7 @@ for icIter = 1:startPts
                 case 'continuous'
 
                     disp('Starting Optimization')
-                    [x] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
+                    [x, terminationMethod] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
 
                     % validate
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
@@ -308,6 +314,7 @@ for icIter = 1:startPts
                     ResultsStruct(icIter).elongationDiff = nonhomogeneous;
                     ResultsStruct(icIter).finalerror = finalerror;
                     ResultsStruct(icIter).coord_deformed = coorddeformed;
+                    ResultsStruct(icIter).terminationMethod = terminationMethod;
 
 
                 case 'discrete'
@@ -333,7 +340,7 @@ for icIter = 1:startPts
     end
     % plot colored lattice
     if plotOptionsStruct.plotColoredLattice == 1
-        plotColoredStiffnessValues(LinkPropertiesStruct, LatticeGeometryStruct, ResultsStruct(icIter).x, 'Main_Functions\colormap.mat');
+        plotColoredStiffnessValues(LinkPropertiesStruct, LatticeGeometryStruct, ResultsStruct(icIter).x, 'Main_Functions\PlottingFunctions\colormap.mat');
     end
     
 end % end initial conditions loop
