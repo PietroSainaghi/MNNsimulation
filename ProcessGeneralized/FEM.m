@@ -1,7 +1,7 @@
-function [coorddeformed,Kf2u,Ku2f]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
+function [coorddeformed,Kdof,Fdof,udof]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
 
 % author: Pietro Sainaghi
-% original program written by Reinier Kuppens and Ryan Lee
+% original program written by Erwin Mueller and Ryan Lee
 
 % this function evaluates the deformed configuration of the lattice for
 % each behavior using the finite truss method
@@ -19,14 +19,14 @@ Ncases = BehaviorStruct.Ncases;
 
 % finite truss structure - FEMStruct
 DOFnodes = FEMStruct.DOFnodes; % [] indices of nodes that are not grounded
-DOFFinal = FEMStruct.DOFFinal;
+DOFFinal = FEMStruct.DOFFinal; % [] indices of DOF that are not grounded
 F = FEMStruct.F; % [NDOF, Ncases] location and value of forces within degrees of freedom format for each behavior
 k_base = FEMStruct.k_base; % [6,6] stiffness matrix of individual element
 R6 = FEMStruct.R6;
 RT6 = FEMStruct.RT6;
 DOF = FEMStruct.DOF; % [1] number of degrees of freedom in system
 Degrees_per_element = FEMStruct.Degrees_per_element;
-Final = FEMStruct.Final;
+Final = FEMStruct.Final; % [NDOFnodes] % indices of nodes that are free to move
 
 % optimization problem structure - OptimizerDataStruct
 % ForceScaling = OptimizerDataStruct.ForceScaling; % [boolean] yes or no to force scaling
@@ -47,12 +47,15 @@ for e=1:Nbeams
     %Combine stiffness matrix for solving
     K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
 end
-Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
+% take out inversion to use sparse instead
+% Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
 U=(zeros(DOFFinal,Ncases));
 U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
 
 for j=1:Ncases
-    U(:,j)=Kinv*F(Final,j);
+    % sparse matrix inversion
+    Ksub=K(Final,Final);
+    U(:,j)=Ksub\F(Final,j);
     i2=1;
     for i=DOFnodes %loop through the nodes that are not fixed
         U2(i,:,j)=transpose(U(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
@@ -62,6 +65,12 @@ for j=1:Ncases
     coorddeformed(:,:,j)=coord_initial+U2(:,:,j);
 
 end
-Kf2u = Kinv;
-Ku2f = K;
+
+% extract stiffness matrix
+Kdof = Ksub;
+% extract input forces in dof format
+Fdof = F(Final,:);
+% extract final displacements in dof format
+udof = U;
+
 end

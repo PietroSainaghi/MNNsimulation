@@ -21,6 +21,7 @@ coord_initial = LatticeGeometryStruct.coord_initial; % [Ncoord,3] x,y,z coordina
 
 % design features structure - LinkPropertiesStruct
 L1 = LinkPropertiesStruct.L1;  % [1] link length at rest
+nonlinearStiffness = LinkPropertiesStruct.nonlinearStiffness; % [bool] wether to use nonlinearity in control stiffness
 
 % finite truss structure - FEMStruct
 F = FEMStruct.F; % [NDOF, Ncases] location and value of forces within degrees of freedom format for each behavior
@@ -50,8 +51,12 @@ end
 
 %% computations
 
+if nonlinearStiffness
+    coord_deformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+else
+    coord_deformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+end
 
-coord_deformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
 % %Peanalize links with deformatuons that are too large
 % slope = 10000;
 % dCoord = sum((coord_deformed - coord_initial).^3,2)-Elongation_max;

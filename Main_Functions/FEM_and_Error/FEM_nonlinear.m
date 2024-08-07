@@ -28,6 +28,9 @@ DOF = FEMStruct.DOF; % [1] number of degrees of freedom in system
 Degrees_per_element = FEMStruct.Degrees_per_element;
 Final = FEMStruct.Final; % [NDOFnodes] % indices of nodes that are free to move
 
+% design features structure - LinkPropertiesStruct
+nonLinearityType = LinkPropertiesStruct.nonLinearityType;  % [1] link length at rest
+
 % optimization problem structure - OptimizerDataStruct
 % ForceScaling = OptimizerDataStruct.ForceScaling; % [boolean] yes or no to force scaling
 
@@ -59,27 +62,40 @@ U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
 U2_linear=(zeros(Ncoord,DOI,Ncases));
 U2_nonlinear=(zeros(Ncoord,DOI,Ncases));
 
+% complex stiffness matrices to be used in computation
+Kcomplex = K(Final,Final); % remove grounded elements
+Kinvcomplex = inv(Kcomplex); % invert matrix
+
 % handle nonlinear matrix components
-Kcomplex = K(Final,Final);
-Kinvcomplex = inv(Kcomplex);
 K_nonlinear = imag(Kcomplex);
 Kinv_nonlinear = imag(Kinvcomplex);
-for j=1:Ncases
-    % sparse matrix inversion
-    U_nonlinear(:,j)=Kinv_nonlinear*F(Final,j);
-    i2=1;
-    for i=DOFnodes %loop through the nodes that are not fixed
-        U2_nonlinear(i,:,j)=transpose(U_nonlinear(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
-        i2=i2+1;
-    end
+% switch between various nonlinear profiles
+switch nonLinearityType
+
+    % quadratic profile for beam stiffness
+    case 'Quadaratic'
+        for j=1:Ncases
+            % inverse quadratic on stiffness matrix 
+            Kinv_quadratic = sign(Kinv_nonlinear).*sqrt(abs(Kinv_nonlinear));
+            % inverse quadratic on force vector
+            Fvec = F(Final,j);
+            F_quadratic = sign(Fvec).*sqrt(abs(Fvec));
+            % compute displacement
+            U_nonlinear(:,j)=Kinv_quadratic*F_quadratic;
+            i2=1;
+            for i=DOFnodes %loop through the nodes that are not fixed
+                U2_nonlinear(i,:,j)=transpose(U_nonlinear(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
+                i2=i2+1;
+            end
+        end
+
 end
 
 % handle linear matrix components
-K_linear = real(K); % take real part of complex stiffness matrix
+K_linear = real(Kcomplex); % take real part of complex stiffness matrix
+Kinv_linear = real(Kinvcomplex);
 for j=1:Ncases
-    % sparse matrix inversion
-    Ksub=K_linear(Final,Final);
-    U_linear(:,j)=Ksub\F(Final,j);
+    U_linear(:,j)=Kinv_linear*F(Final,j);
     i2=1;
     for i=DOFnodes %loop through the nodes that are not fixed
         U2_linear(i,:,j)=transpose(U_linear(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
@@ -95,7 +111,7 @@ U = U_linear+U_nonlinear;
 U2 = U2_linear+U2_nonlinear;
 
 % extract stiffness matrix
-Kdof = Ksub;
+Kdof = Kcomplex;
 % extract input forces in dof format
 Fdof = F(Final,:);
 % extract final displacements in dof format

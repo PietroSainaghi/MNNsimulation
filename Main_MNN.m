@@ -61,6 +61,19 @@ LinkPropertiesStruct.kLinPassive = kLinPassive;
 LinkPropertiesStruct.kLinMax = kLinMax;
 LinkPropertiesStruct.kLinMin = kLinMin;
 
+%% Nonlinearities in Beam Axial Stiffness
+
+% wether to have nonlinear stiffness
+nonlinearStiffness = true;
+
+% type of nonlinear function for beam stiffness
+    % 'Quadratic' uses F = K * x^2;
+nonLinearityType = 'Quadaratic';
+
+% assemble LinkPropertiesStruct
+LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
+LinkPropertiesStruct.nonLinearityType = nonLinearityType;
+
 
 %% Lattice Gemetry Parameters
 
@@ -69,11 +82,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [8];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [8];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -87,14 +100,14 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
     % set as array to test multiple ones at once
     % can only be 2 for caseType = 1
     % will be overwritten for caseType = 3
-NcasesArray             = [11]; 
+NcasesArray             = [2]; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;
@@ -113,7 +126,7 @@ dxArray              = Elongation_maxArray; % units of m
 % maximum allowed input force
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-MaxForceArray = [8]; % units of N
+MaxForceArray = [2]; % units of N
 
 % type of RNG for randomized behavior
 RNGtype = 'dateandtime'; % options: 'dateandtime' 'deterministic' 'nocontrol'
@@ -175,7 +188,7 @@ PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'AGD'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA

@@ -19,7 +19,8 @@ connectivity = LatticeGeometryStruct.connectivity; % [Nbeams,2] connectivity of 
 L1 = LinkPropertiesStruct.L1;  % [1] link length at rest
 MaxLinkElongation = LinkPropertiesStruct.MaxLinkElongation; % [1] maximum deformation of link
 MaxLinkCompression = LinkPropertiesStruct.MaxLinkCompression; % [1] maximum deformation of link
-  
+nonlinearStiffness = LinkPropertiesStruct.nonlinearStiffness; % [bool] wether to use nonlinearity in control stiffness
+
 % link stiffness values
 discspaceidx; % [Nbeams] stiffness value of each beam, selected from PossibleStiffnessArray
 PossibleStiffnessArray;
@@ -42,8 +43,11 @@ end
 
 
 %% compute deformed shape
-coord_deformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-
+if nonlinearStiffness
+    coord_deformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+else
+    coord_deformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+end
 %% compute link lengths of deformed shapes
 
 for behIDX = 1:Ncases
