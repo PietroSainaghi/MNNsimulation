@@ -82,14 +82,14 @@ caseType        = 4;  % 1) sinusoid behavior     2) random forces   4) generaliz
 
 % number of force behaviors in randomized behaviors 
 % number of discrete via points in generalized curve
-Ncases             = 5; 
+Ncases             = 11; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;
 
 % maximum allowed elongation of random behavior
     % set as array to test multiple ones at once
-Elongation_max  = 0.001; % units of m
+Elongation_max  = 0.0025; % units of m
 
 % aplitude of sine wave for sinusoid behavior
     % set same value as Elongation_max for looping convenience, since

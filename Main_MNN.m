@@ -82,11 +82,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [2];
+NinputANDoutputArray      = [8];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [2];
+NlayersArray              = [8];
 
 % dimensions in space
 DOI = 3;
@@ -100,7 +100,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -188,7 +188,7 @@ PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'SQP'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
