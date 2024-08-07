@@ -61,14 +61,6 @@ LinkPropertiesStruct.kLinPassive = kLinPassive;
 LinkPropertiesStruct.kLinMax = kLinMax;
 LinkPropertiesStruct.kLinMin = kLinMin;
 
-%% Controlled Stiffness Nonlinearities
-
-% wether to use nonlinearities in controlled stiffness profile
-nonlinearStiffness = true;
-
-% assemble LinkPropertiesStruct
-LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
-
 
 %% Lattice Gemetry Parameters
 
@@ -77,11 +69,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [2];
+NinputANDoutputArray      = [8];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [2];
+NlayersArray              = [8];
 
 % dimensions in space
 DOI = 3;
@@ -92,18 +84,17 @@ LatticeGeometryStruct.NinputANDoutputArray = NinputANDoutputArray;
 LatticeGeometryStruct.NlayersArray = NlayersArray;
 LatticeGeometryStruct.DOI = DOI;
 
-
 %% Behavior Configuration
 
 % type of study 
-caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
     % set as array to test multiple ones at once
     % can only be 2 for caseType = 1
     % will be overwritten for caseType = 3
-NcasesArray             = [2]; 
+NcasesArray             = [11]; 
 
 % minimum force allowed as fraction of maximum force
 threshold       = 0.3;
@@ -122,7 +113,7 @@ dxArray              = Elongation_maxArray; % units of m
 % maximum allowed input force
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-MaxForceArray = [2]; % units of N
+MaxForceArray = [8]; % units of N
 
 % type of RNG for randomized behavior
 RNGtype = 'dateandtime'; % options: 'dateandtime' 'deterministic' 'nocontrol'
@@ -173,8 +164,8 @@ discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-% PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
-PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
+PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
+% PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
@@ -184,7 +175,7 @@ PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'AGD'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
@@ -197,9 +188,11 @@ GAerrorChangeThreshold  = 1e-100; % change in error to indicate convergence
 % Sequential Quadratic Programming Hyper-Parameters
 % Only used if optimizer is SQP
 % TODO add other optimization parameters as well
-SQPmaxIterations = 40000; % number of optimizer iterations
-SQPmaxFunEvals = 1e6; % maximum number of allowed function evaluations
-SQPerrorChangeThreshold = 1e-15; % change in error to indicate convergence
+SQPmaxIterations = 2000000; % number of optimizer iterations
+SQPmaxFunEvals = 1e8; % maximum number of allowed function evaluations
+SQPerrorChangeThreshold = 1e-16; % change in error to indicate convergence
+SQPparallelization = true; % whether to use multithreaded optimizer (faster but more resource intensive)
+SQPsteptol = 1e-17; % change in step size to indicate convergence
 
 % Full Pattern Search Hyper-Parameters
 FPSerrorChangeThreshold = 1e-6; % change in error to indicate convergence
@@ -215,7 +208,7 @@ AGDmaxIterations = 1000;
 % will be same as results if false
 % set to true if using GA or other algorithm with lots of function
 % evaluations
-SpecifyCache = false;
+SpecifyCache = 0;
 
 
 % assemble OptimizerDataStruct
@@ -244,6 +237,8 @@ OptimizerDataStruct.FPSmaxIterations = FPSmaxIterations;
 OptimizerDataStruct.FPSsearchFunc = FPSsearchFunc;
 OptimizerDataStruct.FPSalgorithm = FPSalgorithm;
 OptimizerDataStruct.FPSParallelPool = FPSParallelPool;
+OptimizerDataStruct.SQPparallelization = SQPparallelization;
+OptimizerDataStruct.SQPsteptol = SQPsteptol;
 
 %% Plotting Options Configuration
 
@@ -251,7 +246,7 @@ OptimizerDataStruct.FPSParallelPool = FPSParallelPool;
     % Not yet implemented
 scalingterm = 1;
 
-% plot undeformed lattice configuration
+% plot undeformed lattice
 plotUndeformed = 1;
 
 % plot stiffness combinations in lattice
@@ -282,7 +277,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = true;
+    AutoSpecifyOutput = false;
 
 if IWantToSaveOutput
     
