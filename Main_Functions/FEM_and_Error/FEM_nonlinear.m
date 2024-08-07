@@ -1,4 +1,4 @@
-function [coorddeformed,Kdof,Fdof,udof]=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
+function [coorddeformed,Kdof,Fdof,udof]=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x)
 
 % author: Pietro Sainaghi
 % original program written by Erwin Mueller and Ryan Lee
@@ -43,28 +43,56 @@ k=(zeros(2*DOI,2*DOI,Nbeams));
 Ncases = size(F,2);
 for e=1:Nbeams
     %scale the stiffnes accoding to x
-    k(:,:,e)=k_base(:,:,e)*diag([x(e) 1 1 x(e) 1 1]); % USE mtimesx?
+    % assign imaginary value to nonlinear elements of stiffness matrix
+    k(:,:,e)=k_base(:,:,e)*diag([1i*x(e) 1 1 1i*x(e) 1 1]); % USE mtimesx?
     %Combine stiffness matrix for solving
     K(Degrees_per_element(e,:),Degrees_per_element(e,:))=K(Degrees_per_element(e,:),Degrees_per_element(e,:))+RT6(:,:,e)*k(:,:,e)*R6(:,:,e);
 end
 % take out inversion to use sparse instead
 % Kinv=K(Final,Final)^-1; %invert the stiffness Matrix
-U=(zeros(DOFFinal,Ncases));
-U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
 
+% initialize displacement vectors
+U=(zeros(DOFFinal,Ncases));
+U_linear=(zeros(DOFFinal,Ncases));
+U_nonlinear=(zeros(DOFFinal,Ncases));
+U2=(zeros(Ncoord,DOI,Ncases)); %Translation only interesting
+U2_linear=(zeros(Ncoord,DOI,Ncases));
+U2_nonlinear=(zeros(Ncoord,DOI,Ncases));
+
+% handle nonlinear matrix components
+Kcomplex = K(Final,Final);
+Kinvcomplex = inv(Kcomplex);
+K_nonlinear = imag(Kcomplex);
+Kinv_nonlinear = imag(Kinvcomplex);
 for j=1:Ncases
     % sparse matrix inversion
-    Ksub=K(Final,Final);
-    U(:,j)=Ksub\F(Final,j);
+    U_nonlinear(:,j)=Kinv_nonlinear*F(Final,j);
     i2=1;
     for i=DOFnodes %loop through the nodes that are not fixed
-        U2(i,:,j)=transpose(U(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
+        U2_nonlinear(i,:,j)=transpose(U_nonlinear(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
         i2=i2+1;
     end
-    
-    coorddeformed(:,:,j)=coord_initial+U2(:,:,j);
-
 end
+
+% handle linear matrix components
+K_linear = real(K); % take real part of complex stiffness matrix
+for j=1:Ncases
+    % sparse matrix inversion
+    Ksub=K_linear(Final,Final);
+    U_linear(:,j)=Ksub\F(Final,j);
+    i2=1;
+    for i=DOFnodes %loop through the nodes that are not fixed
+        U2_linear(i,:,j)=transpose(U_linear(DOI*(i2-1)+1:DOI*(i2-1)+DOI,j));
+        i2=i2+1;
+    end
+end
+
+% compute displacement from both linear and nonlinear components
+for j=1:Ncases
+    coorddeformed(:,:,j)=coord_initial+U2_linear(:,:,j)+U2_nonlinear(:,:,j);
+end
+U = U_linear+U_nonlinear;
+U2 = U2_linear+U2_nonlinear;
 
 % extract stiffness matrix
 Kdof = Ksub;

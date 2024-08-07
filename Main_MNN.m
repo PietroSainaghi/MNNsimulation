@@ -61,6 +61,14 @@ LinkPropertiesStruct.kLinPassive = kLinPassive;
 LinkPropertiesStruct.kLinMax = kLinMax;
 LinkPropertiesStruct.kLinMin = kLinMin;
 
+%% Controlled Stiffness Nonlinearities
+
+% wether to use nonlinearities in controlled stiffness profile
+nonlinearStiffness = true;
+
+% assemble LinkPropertiesStruct
+LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
+
 
 %% Lattice Gemetry Parameters
 
@@ -69,11 +77,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [7];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [7];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -84,10 +92,11 @@ LatticeGeometryStruct.NinputANDoutputArray = NinputANDoutputArray;
 LatticeGeometryStruct.NlayersArray = NlayersArray;
 LatticeGeometryStruct.DOI = DOI;
 
+
 %% Behavior Configuration
 
 % type of study 
-caseType        = 2;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -140,7 +149,7 @@ ForceScaling        = false;
 EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
-startPts            = 50;
+startPts            = 1;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -188,9 +197,9 @@ GAerrorChangeThreshold  = 1e-100; % change in error to indicate convergence
 % Sequential Quadratic Programming Hyper-Parameters
 % Only used if optimizer is SQP
 % TODO add other optimization parameters as well
-SQPmaxIterations = 400; % number of optimizer iterations
+SQPmaxIterations = 40000; % number of optimizer iterations
 SQPmaxFunEvals = 1e6; % maximum number of allowed function evaluations
-SQPerrorChangeThreshold = 1e-5; % change in error to indicate convergence
+SQPerrorChangeThreshold = 1e-15; % change in error to indicate convergence
 
 % Full Pattern Search Hyper-Parameters
 FPSerrorChangeThreshold = 1e-6; % change in error to indicate convergence
@@ -206,7 +215,7 @@ AGDmaxIterations = 1000;
 % will be same as results if false
 % set to true if using GA or other algorithm with lots of function
 % evaluations
-SpecifyCache = 0;
+SpecifyCache = false;
 
 
 % assemble OptimizerDataStruct
@@ -273,7 +282,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = false;
+    AutoSpecifyOutput = true;
 
 if IWantToSaveOutput
     
