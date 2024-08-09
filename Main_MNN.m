@@ -67,8 +67,9 @@ LinkPropertiesStruct.kLinMin = kLinMin;
 nonlinearStiffness = true;
 
 % type of nonlinear function for beam stiffness
-    % 'Quadratic' uses F = K * x^2;
-nonLinearityType = 'Quadaratic';
+    % 'CB' Cubic: uses F = K * x^3;
+    % 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
+nonLinearityType = 'CB';
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
@@ -82,11 +83,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [8];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [8];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -100,7 +101,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 2;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -115,7 +116,7 @@ threshold       = 0.3;
 % maximum allowed elongation of random behavior
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-Elongation_maxArray  = [0.0025]; % units of m
+Elongation_maxArray  = [0.001]; % units of m
 
 % aplitude of sine wave for sinusoid behavior
     % set same value as Elongation_maxArray for looping convenience, since
@@ -188,7 +189,7 @@ PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'SQP'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
@@ -205,7 +206,7 @@ SQPmaxIterations = 2000000; % number of optimizer iterations
 SQPmaxFunEvals = 1e8; % maximum number of allowed function evaluations
 SQPerrorChangeThreshold = 1e-16; % change in error to indicate convergence
 SQPparallelization = true; % whether to use multithreaded optimizer (faster but more resource intensive)
-SQPsteptol = 1e-17; % change in step size to indicate convergence
+SQPsteptol = 1e-16; % change in step size to indicate convergence
 
 % Full Pattern Search Hyper-Parameters
 FPSerrorChangeThreshold = 1e-6; % change in error to indicate convergence
@@ -271,7 +272,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 
