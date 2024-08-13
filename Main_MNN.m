@@ -64,7 +64,7 @@ LinkPropertiesStruct.kLinMin = kLinMin;
 %% Nonlinearities in Beam Axial Stiffness
 
 % wether to have nonlinear stiffness
-nonlinearStiffness = true;
+nonlinearStiffness = false;
 
 % type of nonlinear function for beam stiffness
     % 'CB' Cubic: uses F = K * x^3;
@@ -101,7 +101,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 2;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -154,7 +154,7 @@ ForceScaling        = false;
 EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
-startPts            = 1;
+startPts            = 5;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -174,12 +174,22 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'continuous'; % 'discrete' or 'continuous'
+discORcont = 'discrete'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
-PossibleStiffnessArray = linspace(kLinMin, kLinMax, 4300); %N/m
-% PossibleStiffnessArray = [0.06736259 1.813981745 1.9319].*1000; %N/m
+    % set as cell to sweep for different stiffness libraries
+% PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
+cellNum = 0;
+for changeMin = 1:15
+    for changeMax = 1:5
+
+        cellNum = cellNum + 1;
+
+        PossibleStiffnessCell{cellNum} = [0.001*(changeMin), kLinPassive, kLinMax-(0.1*(changeMax-1))];
+
+    end
+end
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
@@ -234,7 +244,7 @@ OptimizerDataStruct.doScaleMSE = doScaleMSE;
 OptimizerDataStruct.discORcont = discORcont;
 OptimizerDataStruct.optimizerArray = optimizerArray;
 OptimizerDataStruct.deterministicRNG = deterministicRNG;
-OptimizerDataStruct.PossibleStiffnessArray = PossibleStiffnessArray;
+OptimizerDataStruct.PossibleStiffnessCell = PossibleStiffnessCell;
 OptimizerDataStruct.MSEunits = MSEunits;
 OptimizerDataStruct.SpecifyCache = SpecifyCache;
 OptimizerDataStruct.GAerrorChangeThreshold = GAerrorChangeThreshold;
@@ -258,10 +268,10 @@ OptimizerDataStruct.SQPsteptol = SQPsteptol;
 
 % scale width of deformed parts
     % Not yet implemented
-scalingterm = 1;
+scalingterm = 0;
 
 % plot undeformed lattice
-plotUndeformed = 1;
+plotUndeformed = 0;
 
 % plot stiffness combinations in lattice
 plotColoredLattice = 0;
@@ -272,7 +282,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 1;
+plotEndpoints = 0;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 
@@ -418,139 +428,146 @@ NoptRuns = 0;
 % loop through number of inputs and output nodes
 for NinputANDoutputIter = 1:length(NinputANDoutputArray)
     LatticeGeometryStruct.NinputANDoutput = LatticeGeometryStruct.NinputANDoutputArray(NinputANDoutputIter);
-    
+
     % loop through number of layers
     for NlayersIter = 1:length(NlayersArray)
         LatticeGeometryStruct.Nlayers = LatticeGeometryStruct.NlayersArray(NlayersIter);
-        
-        % loop through output amplitudes
-        for dxIter = 1:length(dxArray)
-            BehaviorStruct.dx = BehaviorStruct.dxArray(dxIter);
-            BehaviorStruct.Elongation_max = BehaviorStruct.Elongation_maxArray(dxIter);
-            
-            % loop through input force magnitudes
-            for MaxForceIter = 1:length(MaxForceArray)
-                BehaviorStruct.MaxForce = BehaviorStruct.MaxForceArray(MaxForceIter);
-                
-                % loop through number of cases
-                for NcasesIter = 1:length(NcasesArray)
-                    BehaviorStruct.Ncases = BehaviorStruct.NcasesArray(NcasesIter);
-                    
-                    % loop though optimizers
-                    for optimizerIter = 1:length(OptimizerDataStruct.optimizerArray)
-                        OptimizerDataStruct.optimizer = OptimizerDataStruct.optimizerArray{optimizerIter};
-                        
-                        % Loop through number of behaviors
-                        for behaviorSetIter = 1:NumBehFiles
-                            
-                            % load behavior if from file
-                            if caseType == 3
-                                if AutoSelectBeh
-                                    load(AutoSelectedBehString);
-                                else
-                                    load([dataPath,fileList])
+
+        % loop through various stiffness libraries
+        for StiffnessLibraryIter = 1:length(PossibleStiffnessCell)
+            OptimizerDataStruct.PossibleStiffnessArray = OptimizerDataStruct.PossibleStiffnessCell{StiffnessLibraryIter};
+
+            % loop through output amplitudes
+            for dxIter = 1:length(dxArray)
+                BehaviorStruct.dx = BehaviorStruct.dxArray(dxIter);
+                BehaviorStruct.Elongation_max = BehaviorStruct.Elongation_maxArray(dxIter);
+
+                % loop through input force magnitudes
+                for MaxForceIter = 1:length(MaxForceArray)
+                    BehaviorStruct.MaxForce = BehaviorStruct.MaxForceArray(MaxForceIter);
+
+                    % loop through number of cases
+                    for NcasesIter = 1:length(NcasesArray)
+                        BehaviorStruct.Ncases = BehaviorStruct.NcasesArray(NcasesIter);
+
+                        % loop though optimizers
+                        for optimizerIter = 1:length(OptimizerDataStruct.optimizerArray)
+                            OptimizerDataStruct.optimizer = OptimizerDataStruct.optimizerArray{optimizerIter};
+
+                            % Loop through number of behaviors
+                            for behaviorSetIter = 1:NumBehFiles
+
+                                % load behavior if from file
+                                if caseType == 3
+                                    if AutoSelectBeh
+                                        load(AutoSelectedBehString);
+                                    else
+                                        load([dataPath,fileList])
+                                    end
+                                    BehaviorStruct.Target = PregenBehStruct.Target;
+                                    BehaviorStruct.forces = PregenBehStruct.forces;
+                                    BehaviorStruct.Ncases = PregenBehStruct.Ncases;
+                                    BehaviorStruct.Elongation_max = PregenBehStruct.Elongation_max;
+                                    BehaviorStruct.MaxForce = PregenBehStruct.MaxForce;
+                                    BehaviorStruct.dx = PregenBehStruct.dx;
                                 end
-                                BehaviorStruct.Target = PregenBehStruct.Target;
-                                BehaviorStruct.forces = PregenBehStruct.forces;
-                                BehaviorStruct.Ncases = PregenBehStruct.Ncases;
-                                BehaviorStruct.Elongation_max = PregenBehStruct.Elongation_max;
-                                BehaviorStruct.MaxForce = PregenBehStruct.MaxForce;
-                                BehaviorStruct.dx = PregenBehStruct.dx;
-                            end
-                            
-                            % set overall run number
-                            NoptRuns = NoptRuns + 1;
-                            % debug study display
-                            disp(['Design study run number: ', num2str(NoptRuns),' / ',num2str(length(optimizerArray)*length(NcasesArray)*length(MaxForceArray)*length(dxArray)*length(NlayersArray)*length(NinputANDoutputArray))])
-                            disp(['Number of input/output nodes: ', num2str(LatticeGeometryStruct.NinputANDoutput)])
-                            disp(['Number of layers: ', num2str(LatticeGeometryStruct.Nlayers)])
-                            if BehaviorStruct.caseType == 1
-                                disp(['Behavior type: sinusoid'])
-                            elseif BehaviorStruct.caseType == 2
-                                disp(['Behavior type: random',', ',BehaviorStruct.RNGtype, ' RNG'])
-                            elseif BehaviorStruct.caseType == 3
-                                disp(['Behavior type: saved'])
-                            end
-                            disp(['Number of sets of behaviors: ', num2str(NumBehFiles)])
-                            disp(['Behavior Output Amplitude: ', num2str(BehaviorStruct.Elongation_max)])
-                            disp(['Behavior max force: ', num2str(BehaviorStruct.MaxForce)])
-                            disp(['Number of behaviors to optimize: ', num2str(BehaviorStruct.Ncases)])
-                            disp(['Type of optimizer: ', (OptimizerDataStruct.optimizer)])
-                            disp(['Optimization space: ', (OptimizerDataStruct.discORcont)])
-                            
-                            % set deterministic RNG for random behavior
-                            switch BehaviorStruct.RNGtype
-                                case 'deterministic'
-                                    BehaviorStruct.RNG_seed_det = NoptRuns*3;
-                            end
-                            
-                            
-                            % generate MNN lattice structure
-                            LatticeGeometryStruct = packageLattice(LinkPropertiesStruct, LatticeGeometryStruct);
-                            
-                            
-                            if (caseType == 1) || (caseType == 2)
-                                % generate behavior
-                                BehaviorStruct = packageBehavior(LatticeGeometryStruct,BehaviorStruct);
-                            end
+
+                                % set overall run number
+                                NoptRuns = NoptRuns + 1;
+                                % debug study display
+                                disp(['Design study run number: ', num2str(NoptRuns),' / ',num2str(length(optimizerArray)*length(NcasesArray)*length(MaxForceArray)*length(dxArray)*length(NlayersArray)*length(NinputANDoutputArray))])
+                                disp(['Number of input/output nodes: ', num2str(LatticeGeometryStruct.NinputANDoutput)])
+                                disp(['Number of layers: ', num2str(LatticeGeometryStruct.Nlayers)])
+                                disp(['Stiffness Library Number: ', num2str(StiffnessLibraryIter), ' / ', num2str(length(OptimizerDataStruct.PossibleStiffnessCell))])
+                                if BehaviorStruct.caseType == 1
+                                    disp(['Behavior type: sinusoid'])
+                                elseif BehaviorStruct.caseType == 2
+                                    disp(['Behavior type: random',', ',BehaviorStruct.RNGtype, ' RNG'])
+                                elseif BehaviorStruct.caseType == 3
+                                    disp(['Behavior type: saved'])
+                                end
+                                disp(['Number of sets of behaviors: ', num2str(NumBehFiles)])
+                                disp(['Behavior Output Amplitude: ', num2str(BehaviorStruct.Elongation_max)])
+                                disp(['Behavior max force: ', num2str(BehaviorStruct.MaxForce)])
+                                disp(['Number of behaviors to optimize: ', num2str(BehaviorStruct.Ncases)])
+                                disp(['Type of optimizer: ', (OptimizerDataStruct.optimizer)])
+                                disp(['Optimization space: ', (OptimizerDataStruct.discORcont)])
+
+                                % set deterministic RNG for random behavior
+                                switch BehaviorStruct.RNGtype
+                                    case 'deterministic'
+                                        BehaviorStruct.RNG_seed_det = NoptRuns*3;
+                                end
+
+
+                                % generate MNN lattice structure
+                                LatticeGeometryStruct = packageLattice(LinkPropertiesStruct, LatticeGeometryStruct);
+
+
+                                if (caseType == 1) || (caseType == 2)
+                                    % generate behavior
+                                    BehaviorStruct = packageBehavior(LatticeGeometryStruct,BehaviorStruct);
+                                end
 
 
 
-                            % compute MSE scale factor
-                            % unused if OptimizerDataStruct.doScaleMSE = 0
-                            if OptimizerDataStruct.doScaleMSE == 1
-                                MSEscale = computeMSEScaleFactor(LatticeGeometryStruct,BehaviorStruct);
-                                % store in structure OptimizerDataStruct
-                                OptimizerDataStruct.MSEscale = MSEscale;
-                            else
-                                % store in structure OptimizerDataStruct
-                                % zero means unused
-                                OptimizerDataStruct.MSEscale = 0;
-                            end
+                                % compute MSE scale factor
+                                % unused if OptimizerDataStruct.doScaleMSE = 0
+                                if OptimizerDataStruct.doScaleMSE == 1
+                                    MSEscale = computeMSEScaleFactor(LatticeGeometryStruct,BehaviorStruct);
+                                    % store in structure OptimizerDataStruct
+                                    OptimizerDataStruct.MSEscale = MSEscale;
+                                else
+                                    % store in structure OptimizerDataStruct
+                                    % zero means unused
+                                    OptimizerDataStruct.MSEscale = 0;
+                                end
 
-                            
-                            
-                            % set up finite truss structure (finite element used equivalently)
-                            [DOFFinal,Final, F, DOFnodes,k_base,R6,RT6,DOF,Degrees_per_element] = FEM_setup(LinkPropertiesStruct,LatticeGeometryStruct,BehaviorStruct);
-                            
-                            %store in structure FEMStruct
-                            FEMStruct.DOFFinal = DOFFinal;
-                            FEMStruct.Final = Final;
-                            FEMStruct.F = F;
-                            FEMStruct.DOFnodes = DOFnodes;
-                            FEMStruct.k_base = k_base;
-                            FEMStruct.R6 = R6;
-                            FEMStruct.RT6 = RT6;
-                            FEMStruct.DOF = DOF;
-                            FEMStruct.Degrees_per_element = Degrees_per_element;
-                            
-                            % run MNN with given specifications
-                            ResultsStruct = MNN_run(...
-                                LinkPropertiesStruct,...
-                                LatticeGeometryStruct,...
-                                BehaviorStruct,...
-                                OptimizerDataStruct,...
-                                FEMStruct,...
-                                plotOptionsStruct);
-                            
-                            % save to individual cell
-                            SweepOutput{...
-                                NinputANDoutputIter,...
-                                NlayersIter,...
-                                dxIter,...
-                                MaxForceIter,...
-                                NcasesIter,...
-                                optimizerIter} = ResultsStruct;
-                            
-                            
-                            disp(newline)
-                            disp(newline)
-                            
-                        end % end behavior set loop
-                    end % end optimizer loop
-                end % end number of behaviors loop
-            end % end input force loop
-        end % end output amplitude loop
+
+
+                                % set up finite truss structure (finite element used equivalently)
+                                [DOFFinal,Final, F, DOFnodes,k_base,R6,RT6,DOF,Degrees_per_element] = FEM_setup(LinkPropertiesStruct,LatticeGeometryStruct,BehaviorStruct);
+
+                                %store in structure FEMStruct
+                                FEMStruct.DOFFinal = DOFFinal;
+                                FEMStruct.Final = Final;
+                                FEMStruct.F = F;
+                                FEMStruct.DOFnodes = DOFnodes;
+                                FEMStruct.k_base = k_base;
+                                FEMStruct.R6 = R6;
+                                FEMStruct.RT6 = RT6;
+                                FEMStruct.DOF = DOF;
+                                FEMStruct.Degrees_per_element = Degrees_per_element;
+
+                                % run MNN with given specifications
+                                ResultsStruct = MNN_run(...
+                                    LinkPropertiesStruct,...
+                                    LatticeGeometryStruct,...
+                                    BehaviorStruct,...
+                                    OptimizerDataStruct,...
+                                    FEMStruct,...
+                                    plotOptionsStruct);
+
+                                % save to individual cell
+                                SweepOutput{...
+                                    NinputANDoutputIter,...
+                                    NlayersIter,...
+                                    StiffnessLibraryIter,...
+                                    dxIter,...
+                                    MaxForceIter,...
+                                    NcasesIter,...
+                                    optimizerIter} = ResultsStruct;
+
+
+                                disp(newline)
+                                disp(newline)
+
+                            end % end behavior set loop
+                        end % end optimizer loop
+                    end % end number of behaviors loop
+                end % end input force loop
+            end % end output amplitude loop
+        end % end stiffness libraries loop
     end % end number of layers loop
 end % end number of input nodes loop
 
