@@ -64,7 +64,7 @@ LinkPropertiesStruct.kLinMin = kLinMin;
 %% Nonlinearities in Beam Axial Stiffness
 
 % wether to have nonlinear stiffness
-nonlinearStiffness = false;
+nonlinearStiffness = true;
 
 % type of nonlinear function for beam stiffness
     % 'CB' Cubic: uses F = K * x^3;
@@ -83,11 +83,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [2];
+NinputANDoutputArray      = [8];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [2];
+NlayersArray              = [8];
 
 % dimensions in space
 DOI = 3;
@@ -174,7 +174,7 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'discrete'; % 'discrete' or 'continuous'
+discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
@@ -199,7 +199,7 @@ end
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'SQP'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA

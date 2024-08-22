@@ -75,18 +75,18 @@ Ksub_IC = Ksub_linear + Ksub_nonlinear;
 %treat system as fully linear
 
 % loop through behaviors
-for behNum=1:Ncases
-    % sparse matrix inversion
-    U_ic(:,behNum)=Ksub_IC\F(Final,behNum);
-    % DOFnum2=1;
-    % for DOFnum=DOFnodes %loop through the nodes that are not fixed
-    %     U2_ic(DOFnum,:,behNum)=transpose(U_ic(DOI*(DOFnum2-1)+1:DOI*(DOFnum2-1)+DOI,behNum));
-    %     DOFnum2=DOFnum2+1;
-    % end
-    %
-    % coorddeformed(:,:,behNum)=coord_initial+U2_ic(:,:,behNum);
-
-end
+% for behNum=1:Ncases
+%     % sparse matrix inversion
+%     U_ic(:,behNum)=Ksub_IC\F(Final,behNum);
+%     % DOFnum2=1;
+%     % for DOFnum=DOFnodes %loop through the nodes that are not fixed
+%     %     U2_ic(DOFnum,:,behNum)=transpose(U_ic(DOI*(DOFnum2-1)+1:DOI*(DOFnum2-1)+DOI,behNum));
+%     %     DOFnum2=DOFnum2+1;
+%     % end
+%     %
+%     % coorddeformed(:,:,behNum)=coord_initial+U2_ic(:,:,behNum);
+% 
+% end
 
 %% newton raphson to compute nonlinear system
 
