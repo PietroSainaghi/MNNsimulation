@@ -72,7 +72,7 @@ nonlinearStiffness = true;
     % 'EXP' Exponential: F = Klin * u + Knonlin * Fmax * (exp(u)-1)
     % WIP 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
     % WIP 'CB' Cubic: uses F = K * u^3;
-nonLinearityType = 'ATAN';
+nonLinearityType = 'EXP';
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;

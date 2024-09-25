@@ -100,8 +100,12 @@ for icIter = 1:startPts
                     finalerror = ERROR_discrete(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x_idx,PossibleStiffnessArray);
                     disp(['Final Error: ',num2str(finalerror)])
                     [nonhomogeneous, homogeneous] = ELONGATION_discrete(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x_idx,PossibleStiffnessArray);
-                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,stiffnesscombofinal);
-                    
+                    if LinkPropertiesStruct.nonlinearStiffness
+                        coorddeformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,stiffnesscombofinal);
+                    else
+                        coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,stiffnesscombofinal);
+                    end
+
                     % extract iteration progression data from mat file created by gaoutfun
                     load('CacheDirectory.mat')
                     load(CachePath)
@@ -163,8 +167,12 @@ for icIter = 1:startPts
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
                     disp(['Final Error: ',num2str(finalerror)])
                     [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
-                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-                    
+                    if LinkPropertiesStruct.nonlinearStiffness
+                        coorddeformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    else
+                        coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    end
+
                     % extract iteration progression data from mat file created by gaoutfun
                     load('CacheDirectory.mat')
                     load(CachePath)
@@ -227,8 +235,11 @@ for icIter = 1:startPts
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
                     disp(['Final Error: ',num2str(finalerror)])
                     [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
-                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-                    
+                    if LinkPropertiesStruct.nonlinearStiffness
+                        coorddeformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    else
+                        coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    end
                     
                     % output data
                     ResultsStruct(icIter).x = x;
@@ -282,8 +293,11 @@ for icIter = 1:startPts
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
                     disp(['Final Error: ',num2str(finalerror)])
                     [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
-                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-                    
+                    if LinkPropertiesStruct.nonlinearStiffness
+                        coorddeformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    else
+                        coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    end
                     
                     % output data
                     ResultsStruct(icIter).x = x;
@@ -306,8 +320,11 @@ for icIter = 1:startPts
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
                     disp(['Final Error: ',num2str(finalerror)])
                     [nonhomogeneous, homogeneous] = ELONGATION_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, x);
-                    coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
-                    
+                    if LinkPropertiesStruct.nonlinearStiffness
+                        coorddeformed=FEM_nonlinear(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    else
+                        coorddeformed=FEM(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);
+                    end
                     
                     % output data
                     ResultsStruct(icIter).x = x;

@@ -14,7 +14,7 @@ for numEndPoints = 1 : LatticeGeometryStruct.NinputANDoutput
     plot(BehaviorStruct.Target(numEndPoints,1,numBeh),BehaviorStruct.Target(numEndPoints,2,numBeh),'r*')
     axis([LatticeGeometryStruct.coord_initial(LatticeGeometryStruct.outputNodes(numEndPoints),1)-axesAmplitude LatticeGeometryStruct.coord_initial(LatticeGeometryStruct.outputNodes(numEndPoints),1)+axesAmplitude LatticeGeometryStruct.coord_initial(LatticeGeometryStruct.outputNodes(numEndPoints),2)-axesAmplitude LatticeGeometryStruct.coord_initial(LatticeGeometryStruct.outputNodes(numEndPoints),2)+axesAmplitude])
     title(['Point ',num2str(numEndPoints),' Behavior ',num2str(numBeh)])
-    legend('Start', 'Results', 'Target')
+    % legend('Start', 'Results', 'Target')
     grid on
     
 %     figure(200+numEndPoints)
