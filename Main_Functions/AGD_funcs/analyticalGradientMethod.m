@@ -54,6 +54,10 @@ DOFnodes = FEMStruct.DOFnodes; % [] indices of nodes that are not grounded
 kLinMax = LinkPropertiesStruct.kLinMax;
 kLinMin = LinkPropertiesStruct.kLinMin;
 
+% nonlinearities
+nonlinearStiffness = LinkPropertiesStruct.nonlinearStiffness;
+nonLinearityType = LinkPropertiesStruct.nonLinearityType;
+
 
 %% Initialize length parameters
 
@@ -212,7 +216,17 @@ while abs(MSEchange) > MSEChangethreshold
     % compute derivative of force wrt displacement
     dFdu = zeros(NDOF,NDOF);
     % dFdu = Kdof'; % TEST
-    dFdu = Kdof;
+    if nonlinearStiffness == false
+        dFdu = Kdof;
+    else
+        switch nonLinearityType
+            case 'CB'
+                for behIDX = 1:Ncases
+                    dFdu_beh(:,:,behIDX) = 2 * Kdof * diag(u(:,behIDX).^2);
+                end
+                dFdu = sum(dFdu_beh,3);
+        end
+    end
 
     % compute derivative of force wrt stiffness
     % dFdK = zeros(NDOF,NDOF^2,Ncases);

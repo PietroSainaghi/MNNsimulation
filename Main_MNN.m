@@ -67,9 +67,12 @@ LinkPropertiesStruct.kLinMin = kLinMin;
 nonlinearStiffness = true;
 
 % type of nonlinear function for beam stiffness
-    % 'CB' Cubic: uses F = K * x^3;
-    % 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
-nonLinearityType = 'CB';
+    % 'ATAN' Arctangent: F = Klin * u + Knonlin * tan(u)
+    % 'RAMP' Ramp function: F = Klin * u + Knonlin * u * (u>=0)
+    % 'EXP' Exponential: F = Klin * u + Knonlin * Fmax * (exp(u)-1)
+    % WIP 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
+    % WIP 'CB' Cubic: uses F = K * u^3;
+nonLinearityType = 'ATAN';
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
@@ -83,11 +86,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [8];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [8];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -101,7 +104,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -116,7 +119,7 @@ threshold       = 0.3;
 % maximum allowed elongation of random behavior
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-Elongation_maxArray  = [0.001]; % units of m
+Elongation_maxArray  = [0.0025]; % units of m
 
 % aplitude of sine wave for sinusoid behavior
     % set same value as Elongation_maxArray for looping convenience, since
@@ -154,7 +157,7 @@ ForceScaling        = false;
 EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
-startPts            = 5;
+startPts            = 1;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -179,17 +182,17 @@ discORcont = 'continuous'; % 'discrete' or 'continuous'
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
     % set as cell to sweep for different stiffness libraries
-% PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
-cellNum = 0;
-for changeMin = 1:15
-    for changeMax = 1:5
-
-        cellNum = cellNum + 1;
-
-        PossibleStiffnessCell{cellNum} = [0.001*(changeMin), kLinPassive, kLinMax-(0.1*(changeMax-1))];
-
-    end
-end
+PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
+% cellNum = 0;
+% for changeMin = 1:15
+%     for changeMax = 1:5
+% 
+%         cellNum = cellNum + 1;
+% 
+%         PossibleStiffnessCell{cellNum} = [0.001*(changeMin), kLinPassive, kLinMax-(0.1*(changeMax-1))];
+% 
+%     end
+% end
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
@@ -274,7 +277,7 @@ scalingterm = 0;
 plotUndeformed = 0;
 
 % plot stiffness combinations in lattice
-plotColoredLattice = 0;
+plotColoredLattice = 1;
 
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
@@ -282,7 +285,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 0;
+plotEndpoints = 1;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 
@@ -301,7 +304,7 @@ plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = false;
+    AutoSpecifyOutput = true;
 
 if IWantToSaveOutput
     

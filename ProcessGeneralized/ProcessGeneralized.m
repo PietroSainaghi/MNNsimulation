@@ -241,7 +241,7 @@ for decoupledIDX = 1:Ndecoupled
     end
 end
 
-%% Singular Value Decomposition
+%% Validation & Singular Value Decomposition
 
 % singular value decomposition
 [U,S,V] = svd(Kf2u);
@@ -252,7 +252,7 @@ Ncirc = 1000;
 % set of input angles
 theta = linspace(0,2*pi,Ncirc);
 
-% plot individual transformations
+% compute individual transformations and final
 % A = U*S*V'
 for circIDX = 1:Ncirc
     % compute force magnitudes
@@ -292,6 +292,65 @@ for outIDX = 1:Noutput
         axis equal
     end
 end
+
+%% Plot Elliptical Space
+
+% input force magnitude space
+FmagArray = linspace(0,2,5);
+
+% compute Force -> Displkacement transformation for a full revolution at
+% each magnitude
+for FIDX = 1:length(FmagArray)
+    for circIDX = 1:Ncirc
+
+        % compute force magnitudes
+        Ymag = cos( theta(circIDX) ) * FmagArray(FIDX);
+        Xmag = sin( theta(circIDX) ) * FmagArray(FIDX);
+
+        % arrange force input vector
+        F = [];
+        for outIDX = 1:Noutput
+            F = [F;Xmag;Ymag];
+        end
+        Flinspace(:,circIDX,FIDX) = F;
+
+        % compute output displacement
+        u = Kf2u*F;
+        Ulinspace(:,circIDX,FIDX) = u;
+    end
+end
+
+% color scale for space
+Color0 = [0 92 105] ./ 255;
+Colorf = [92 0 105] ./ 255;
+
+
+% colored plot
+figure
+hold on
+for FIDX = 1:length(FmagArray)
+    % select color 
+    colorg = Color0 + ((Colorf - Color0) / (max(FmagArray)-min(FmagArray)) * (FmagArray(FIDX)-min(FmagArray)));
+
+    for outIDX = 1:Noutput
+        % extract displacements
+        dispX = Ulinspace( (outIDX*2-1) ,:,FIDX);
+        dispY = Ulinspace( (outIDX*2) ,:,FIDX);
+
+        % add displacements to original positions
+        posX = OutCoordInitial(outIDX,1) + dispX;
+        posY = OutCoordInitial(outIDX,2) + dispY;
+
+        % add to subplot
+        subplot(Noutput,1, Noutput+1-outIDX )
+        hold on
+        plot(posX,posY,"Color",colorg)
+        grid on
+        axis([mean(BehaviorStruct.Target(outIDX,1,:))-0.002 mean(BehaviorStruct.Target(outIDX,1,:))+0.002 BehaviorStruct.Target(outIDX,2,1)-0.0005 BehaviorStruct.Target(outIDX,2,1)+0.0005])
+    end
+end
+
+
 
 %% Evaluate Reduced Matrix Properties
 

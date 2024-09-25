@@ -27,7 +27,7 @@ RT6 = FEMStruct.RT6;
 DOF = FEMStruct.DOF; % [1] number of degrees of freedom in system
 Degrees_per_element = FEMStruct.Degrees_per_element;
 Final = FEMStruct.Final; % [NDOFnodes] % indices of nodes that are free to move
-Fmax = max(max(F));
+MaxForce = BehaviorStruct.MaxForce;
 
 % link properties structure
 nonLinearityType = LinkPropertiesStruct.nonLinearityType;
@@ -70,78 +70,44 @@ Ksub_nonlinear = imag(Ksub_complex);
 % linearized stiffness matrix for initial conditions
 Ksub_IC = Ksub_linear + Ksub_nonlinear;
 
-%% compute initial condition for newton raphson
 
-%treat system as fully linear
 
-% loop through behaviors
-% for behNum=1:Ncases
-%     % sparse matrix inversion
-%     U_ic(:,behNum)=Ksub_IC\F(Final,behNum);
-%     % DOFnum2=1;
-%     % for DOFnum=DOFnodes %loop through the nodes that are not fixed
-%     %     U2_ic(DOFnum,:,behNum)=transpose(U_ic(DOI*(DOFnum2-1)+1:DOI*(DOFnum2-1)+DOI,behNum));
-%     %     DOFnum2=DOFnum2+1;
-%     % end
-%     %
-%     % coorddeformed(:,:,behNum)=coord_initial+U2_ic(:,:,behNum);
-% 
-% end
-
-%% newton raphson to compute nonlinear system
+%% numerical solver to compute nonlinear system
 
 % loop through behaviors
 for behNum=1:Ncases
 
-    % switch based on nonlinear function
-    switch nonLinearityType
-        case 'CB'
-            % get displacemnt initial condition for given behavior
-            Uiter = U_ic(:,behNum);
-            % start flag for convergence
-            deltaNorm = 1000;
-            iterNR = 0;
-            while deltaNorm > 1e-10;
-                iterNR = iterNR+1;
-                if iterNR > 100
-                    error('Newton-Raphson did not converge')
-                end
-                % compute newton raphson function
-                L = -F(Final,behNum) + Ksub_linear * Uiter + Ksub_nonlinear * (Uiter).^3;
-                % compute newton raphson jacobian
-                dLdU = Ksub_linear + 3 * Ksub_nonlinear * diag( sign(Uiter) .* (Uiter).^2 );
-                % compute updated iteration
-                delta = dLdU\L;
-                deltaNorm = norm(delta);
-                Uiter = Uiter - delta;
-            end
-            % assign value to nonlinear displacement for given behavior
-            U(:,behNum) = Uiter;
+    % get displacemnt initial condition for given behavior
+    U_ic_inter = U_ic(:,behNum);
 
-        case 'ERF'
-            % get displacemnt initial condition for given behavior
-            Uiter = U_ic(:,behNum);
-            % start flag for convergence
-            deltaNorm = 1000;
-            iterNR = 0;
-            while deltaNorm > 1e-10;
-                iterNR = iterNR+1;
-                if iterNR > 100
-                    error('Newton-Raphson did not converge')
-                end
-                % compute newton raphson function
-                L = -F(Final,behNum) + Ksub_linear * Uiter + Ksub_nonlinear * ( erf( Uiter ) );
-                % compute newton raphson jacobian
-                dLdU = Ksub_linear + Ksub_nonlinear * diag( (1-1e-10) * exp( -( Uiter ).^2 ) );
-                % compute updated iteration
-                delta = dLdU\L;
-                deltaNorm = norm(delta)
-                Uiter = Uiter - delta;
-            end
-            % assign value to nonlinear displacement for given behavior
-            U(:,behNum) = Uiter;
+    % get forces stored as single vector
+    F_forresidual = F(Final,behNum);
+
+    % switch for nonlinearity types
+    switch nonLinearityType
+        case 'ATAN' % F = Klin * u + Knonlin * (2*Fmax/pi) * atan(u)
+            % define nonlinear function 
+            fun = @(U) nonlinearstiffness_atan(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, U);
+        case 'RAMP' % F = Klin * u + Knonlin * u * (u>=0)
+            % define nonlinear function
+            fun = @(U) nonlinearstiffness_ramp(F_forresidual, Ksub_linear, Ksub_nonlinear, U);
+        case 'EXP' % F = Klin * u + Knonlin * Fmax * (exp(u)-1)
+            % define nonlienar function
+            fun = @(U) nonlinearstiffness_exp(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, U);
     end
+
+    % nonlinear solver options
+    options = optimoptions('fsolve',...
+        'Algorithm','trust-region-dogleg',...
+        'Display','none');
+
+    % solve nonlinear system
+    U_computed = fsolve(fun, U_ic_inter,options);
+
+    % assign value to nonlinear displacement for given behavior
+    U(:,behNum) = U_computed;
 end
+
 
 %% compute deformed lattice
 
