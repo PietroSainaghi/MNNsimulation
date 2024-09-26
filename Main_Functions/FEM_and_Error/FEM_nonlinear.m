@@ -29,9 +29,10 @@ Degrees_per_element = FEMStruct.Degrees_per_element;
 Final = FEMStruct.Final; % [NDOFnodes] % indices of nodes that are free to move
 MaxForce = BehaviorStruct.MaxForce;
 
+
 % link properties structure
 nonLinearityType = LinkPropertiesStruct.nonLinearityType;
-MaxLinkElongation = LinkPropertiesStruct.MaxLinkElongation;
+MaxLinkU = max([LinkPropertiesStruct.MaxLinkElongation, LinkPropertiesStruct.MaxLinkCompression]);
 
 % optimization problem structure - OptimizerDataStruct
 % ForceScaling = OptimizerDataStruct.ForceScaling; % [boolean] yes or no to force scaling
@@ -87,13 +88,16 @@ for behNum=1:Ncases
     switch nonLinearityType
         case 'ATAN' % F = Klin * u + Knonlin * (2*Fmax/pi) * atan(u)
             % define nonlinear function 
-            fun = @(U) nonlinearstiffness_atan(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, U);
+            fun = @(U) nonlinearstiffness_atan(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, MaxLinkU, U);
         case 'RAMP' % F = Klin * u + Knonlin * u * (u>=0)
             % define nonlinear function
             fun = @(U) nonlinearstiffness_ramp(F_forresidual, Ksub_linear, Ksub_nonlinear, U);
         case 'EXP' % F = Klin * u + Knonlin * Fmax * (exp(u)-1)
             % define nonlienar function
             fun = @(U) nonlinearstiffness_exp(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, U);
+        case 'CUBE' % F = Klin * u + Knonlin * Fmax * u^3
+            % define nonlienar function
+            fun = @(U) nonlinearstiffness_cube(F_forresidual, Ksub_linear, Ksub_nonlinear, MaxForce, MaxLinkU, U);
     end
 
     % nonlinear solver options

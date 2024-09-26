@@ -70,14 +70,14 @@ nonlinearStiffness = true;
     % 'ATAN' Arctangent: F = Klin * u + Knonlin * tan(u)
     % 'RAMP' Ramp function: F = Klin * u + Knonlin * u * (u>=0)
     % 'EXP' Exponential: F = Klin * u + Knonlin * Fmax * (exp(u)-1)
+    % 'CUBE' Cubic: F = Klin * u + Knonlin * Fmax * u^3
     % WIP 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
     % WIP 'CB' Cubic: uses F = K * u^3;
-nonLinearityType = 'EXP';
+nonLinearityType = 'RAMP';
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
 LinkPropertiesStruct.nonLinearityType = nonLinearityType;
-
 
 %% Lattice Gemetry Parameters
 
@@ -144,6 +144,7 @@ BehaviorStruct.Elongation_maxArray = Elongation_maxArray;
 BehaviorStruct.dxArray = dxArray;
 BehaviorStruct.MaxForceArray = MaxForceArray;
 BehaviorStruct.RNGtype = RNGtype;
+
 
 
 %% Optimizer Configuration
@@ -277,7 +278,7 @@ scalingterm = 0;
 plotUndeformed = 0;
 
 % plot stiffness combinations in lattice
-plotColoredLattice = 1;
+plotColoredLattice = 0;
 
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
@@ -285,7 +286,7 @@ plotDeformed = 0;
 
 % plot endpoints
     % set to 1 only if the loop inludes lattice and one set of behaviors
-plotEndpoints = 1;
+plotEndpoints = 0;
     % amplitude of axes around initial position
 plotEndPointsAmplitude = 0.0025; % in m
 
@@ -296,6 +297,34 @@ plotOptionsStruct.plotDeformed = plotDeformed;
 plotOptionsStruct.plotEndpoints = plotEndpoints;
 plotOptionsStruct.plotColoredLattice = plotColoredLattice;
 plotOptionsStruct.plotEndPointsAmplitude = plotEndPointsAmplitude;
+
+
+%% Plot Nonlinearity Within Viable Range
+
+
+if nonlinearStiffness
+    figure(999)
+    hold on
+    plot([-max(MaxLinkElongation,MaxLinkCompression) max(MaxLinkElongation,MaxLinkCompression)], [-max(MaxForceArray) max(MaxForceArray)],'b--')
+    plot([-max(MaxLinkElongation,MaxLinkCompression) -max(MaxLinkElongation,MaxLinkCompression)], [-max(MaxForceArray) max(MaxForceArray)],'k-')
+    plot([max(MaxLinkElongation,MaxLinkCompression) max(MaxLinkElongation,MaxLinkCompression)], [-max(MaxForceArray) max(MaxForceArray)],'k-')
+    plot([-max(MaxLinkElongation,MaxLinkCompression) max(MaxLinkElongation,MaxLinkCompression)], [-max(MaxForceArray) -max(MaxForceArray)],'k-')
+    plot([-max(MaxLinkElongation,MaxLinkCompression) max(MaxLinkElongation,MaxLinkCompression)], [max(MaxForceArray) max(MaxForceArray)],'k-')
+    u_plot = linspace(-max(MaxLinkElongation,MaxLinkCompression)*1.1,max(MaxLinkElongation,MaxLinkCompression)*1.1,500);
+    switch nonLinearityType
+        case 'ATAN'
+            F_plot = 2 * max(MaxForceArray) / pi * atan(u_plot/max(MaxLinkElongation,MaxLinkCompression)*pi/2);
+        case 'EXP'
+            F_plot = max(MaxForceArray) * (exp(u_plot/max(MaxLinkElongation,MaxLinkCompression))-1);
+        case 'CUBE'
+            F_plot = max(MaxForceArray) * (u_plot/max(MaxLinkElongation,MaxLinkCompression)).^3;
+        case 'RAMP'
+            F_plot = [zeros(1,250) linspace(0,max(MaxForceArray)*1.1,250)];
+    end
+    plot(u_plot, F_plot,'r-')
+    grid on
+    axis([-max(MaxLinkElongation,MaxLinkCompression)*1.1 max(MaxLinkElongation,MaxLinkCompression)*1.1 -max(MaxForceArray)*1.1 max(MaxForceArray)*1.1])
+end
 
 
 %% Save File
