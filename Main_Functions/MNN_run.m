@@ -314,7 +314,7 @@ for icIter = 1:startPts
                 case 'continuous'
 
                     disp('Starting Optimization')
-                    [x, terminationMethod] = analyticalGradientMethod(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
+                    [x, terminationMethod] = analyticalGradientMethod_barrierfunction(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct, xInit);
 
                     % validate
                     finalerror = ERROR_continuous(LinkPropertiesStruct, LatticeGeometryStruct, BehaviorStruct,FEMStruct,OptimizerDataStruct,x);

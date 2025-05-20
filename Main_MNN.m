@@ -64,7 +64,7 @@ LinkPropertiesStruct.kLinMin = kLinMin;
 %% Nonlinearities in Beam Axial Stiffness
 
 % wether to have nonlinear stiffness
-nonlinearStiffness = true;
+nonlinearStiffness = false;
 
 % type of nonlinear function for beam stiffness
     % 'ATAN' Arctangent: F = Klin * u + Knonlin * tan(u)
@@ -73,7 +73,7 @@ nonlinearStiffness = true;
     % 'CUBE' Cubic: F = Klin * u + Knonlin * Fmax * u^3
     % WIP 'ERF' Error function: F = K * ( 2/sqrt(pi) * integral( e ^ -( x / MaxLinkElongation ) ^ 2 ) )
     % WIP 'CB' Cubic: uses F = K * u^3;
-nonLinearityType = 'RAMP';
+nonLinearityType = 'ATAN';
 
 % assemble LinkPropertiesStruct
 LinkPropertiesStruct.nonlinearStiffness = nonlinearStiffness;
@@ -104,7 +104,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -158,7 +158,7 @@ ForceScaling        = false;
 EnforceMaxElongation = false;
 
 % number of runs for each set of behaviors
-startPts            = 1;
+startPts            = 5;
 
 % type of initial condition
 icType          = 3; %1) all max, 2) all min, 3) rand
@@ -178,22 +178,23 @@ MSEunits = 1000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'continuous'; % 'discrete' or 'continuous'
+discORcont = 'discrete'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
     % set as cell to sweep for different stiffness libraries
-PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
-% cellNum = 0;
-% for changeMin = 1:15
-%     for changeMax = 1:5
-% 
-%         cellNum = cellNum + 1;
-% 
-%         PossibleStiffnessCell{cellNum} = [0.001*(changeMin), kLinPassive, kLinMax-(0.1*(changeMax-1))];
-% 
-%     end
-% end
+% PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
+cellNum = 0;
+for changeMin = 1:15
+    for changeMax = -5:1:5
+        for chageMed = -5:1:5
+
+            cellNum = cellNum + 1;
+            PossibleStiffnessCell{cellNum} = [0.001*(changeMin), kLinPassive-(0.1*(chageMed-1)), kLinMax-(0.1*(changeMax-1))];
+
+        end
+    end
+end
 
 % type of optimizer to use
     % set as cell to test multiple ones at once
@@ -203,7 +204,7 @@ PossibleStiffnessCell{1} = linspace(kLinMin, kLinMax, 4300); %N/m
     % FPS: pattern search using matlab function, fast and medium accuracy
     % PPS: partial pattern search, developed by Ryan H. Lee, slow but accurate TODO NYI
     % AGD: analytical gradient method, developed by Jiaji Chen, fast
-optimizerArray = {'SQP'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
+optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 
 % Genetic Algorithm Hyper-Parameters
 % Only used if optimizer is GA
@@ -333,7 +334,7 @@ end
 IWantToSaveOutput = true;
 
 % flag to autoselect output
-    AutoSpecifyOutput = true;
+    AutoSpecifyOutput = false;
 
 if IWantToSaveOutput
     
