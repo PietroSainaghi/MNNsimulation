@@ -19,31 +19,31 @@ addpath(genpath([pwd,'\Main_Functions']))
 % MNN
 
 % length of each beam
-L1                  = 0.156; % m
+L1                  = 10.99567e-3; % m
 %X-component of beam under 60 degrees / 1/3 pi rad
 L2                  = L1*cosd(60); 
 %Y-component of beam under 60 degrees / 1/3 pi rad
 L3                  = L1*cosd(30);     
 
 % maximum link elongation
-MaxLinkElongation   = 0.0025; % m
+MaxLinkElongation   = 1.5e-6; % m
 
 % maximum link compression
-MaxLinkCompression   = 0.0025; % m
+MaxLinkCompression   = 1.5e-6; % m
 
 % stiffness values
     % Force acting perpendicular while rotation is fixed: utcross=0;
-k55                  = 237.1; %N/m
+k55                  = 24.57366; %N/m
     % Force acting perpendicular with rotation of tip allowed
-k56                  = 2.11; %N/rad
+k56                  = 0.120876; %N/rad
     % Moment acting on end while perpendicular translation of tip is allowed 
-k66                  = 25.3; %N*m/rad
+k66                  = 41.57994; %N*m/rad
 
 % passive axial stiffness
-kLinPassive             = 2120; %N/m
+kLinPassive             = 2781.602; %N/m
 
 % maximum controllable stiffness
-kLinMax                 = 2300; %N/m
+kLinMax                 = kLinPassive + 800; %N/m
 
 % minimum controllable stiffness
 kLinMin                 = -2000; %N/m
@@ -86,11 +86,11 @@ latticeType          = 1; %1) triangular 2) square
 
 % number of nodes that receive forces and measure displacements
     % set as array to test multiple ones at once
-NinputANDoutputArray      = [8];
+NinputANDoutputArray      = [2];
 
 % array of numbers of layers
     % set as array to test multiple ones at once
-NlayersArray              = [8];
+NlayersArray              = [2];
 
 % dimensions in space
 DOI = 3;
@@ -104,7 +104,7 @@ LatticeGeometryStruct.DOI = DOI;
 %% Behavior Configuration
 
 % type of study 
-caseType        = 3;  % 1) sinusoid behavior     2) random forces       3) saved behavior
+caseType        = 1;  % 1) sinusoid behavior     2) random forces       3) saved behavior
 % GeneratePresetBehavior will create .mat files compatible with caseType 3
 
 % number of force behaviors in randomized behaviors 
@@ -119,7 +119,7 @@ threshold       = 0.3;
 % maximum allowed elongation of random behavior
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-Elongation_maxArray  = [0.0025]; % units of m
+Elongation_maxArray  = [1e-6]; % units of m
 
 % aplitude of sine wave for sinusoid behavior
     % set same value as Elongation_maxArray for looping convenience, since
@@ -130,7 +130,7 @@ dxArray              = Elongation_maxArray; % units of m
 % maximum allowed input force
     % set as array to test multiple ones at once
     % will be overwritten for caseType = 3
-MaxForceArray = [2]; % units of N
+MaxForceArray = [2e-3]; % units of N
 
 % type of RNG for randomized behavior
 RNGtype = 'dateandtime'; % options: 'dateandtime' 'deterministic' 'nocontrol'
@@ -174,11 +174,11 @@ doScaleMSE = 0; % 0) use MSE, 1) use unitless MSE
 
 % select units for MSE
     % 1 = m, 100 = cm, 1000 = mm, 1000000 = um
-MSEunits = 1000;
+MSEunits = 1000000;
 
 % whether to run a discrete or continuous optimization
     % discrete only works with GA
-discORcont = 'discrete'; % 'discrete' or 'continuous'
+discORcont = 'continuous'; % 'discrete' or 'continuous'
 
 % set diiscrete set of stiffness values
     % unused if discORcont = 'continuous'
@@ -209,7 +209,7 @@ optimizerArray = {'GA'}; % 'GA', 'SQP', 'FPS', 'PPS', 'AGD'
 % Only used if optimizer is GA
 GApopulation = 250; % number of function evaluations each iteration
 GAgenerations = 2000000; % max number of iterations
-GAstallgenerations = 10000; % max number of iterations with same outcome for exit flag
+GAstallgenerations = 5000; % max number of iterations with same outcome for exit flag
 GAparallelPool = true; % whether to use multithreaded optimizer (faster but more resource intensive)
 GAerrorChangeThreshold  = 1e-100; % change in error to indicate convergence
 
@@ -275,10 +275,10 @@ OptimizerDataStruct.SQPsteptol = SQPsteptol;
 scalingterm = 0;
 
 % plot undeformed lattice
-plotUndeformed = 0;
+plotUndeformed = 1;
 
 % plot stiffness combinations in lattice
-plotColoredLattice = 0;
+plotColoredLattice = 1;
 
 % plot deformed lattice
     % set to 1 only if the loop inludes one lattice and one set of behaviors
@@ -288,7 +288,7 @@ plotDeformed = 0;
     % set to 1 only if the loop inludes lattice and one set of behaviors
 plotEndpoints = 1;
     % amplitude of axes around initial position
-plotEndPointsAmplitude = 0.004; % in m
+plotEndPointsAmplitude = 4e-6; % in m
 
 % assemble plotOptionsStruct
 plotOptionsStruct.scalingterm = scalingterm;
